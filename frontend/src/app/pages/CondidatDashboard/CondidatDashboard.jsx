@@ -63,7 +63,7 @@ export default function RecruteurDashboard() {
         {showSideBar && <SideBarre onNavigate={setActivePage} />}
 
         <div className=" overflow-y-auto w-full ml-64">
-          {activePage === "homme" && <Homme />}
+          {activePage === "homme" && <Homme onNavigate={setActivePage} />}
           {activePage === "profile" && <ProfilPage />}
           {activePage === "cv" && < UploadCV />}
           {activePage === "offre" && <OffreList />}

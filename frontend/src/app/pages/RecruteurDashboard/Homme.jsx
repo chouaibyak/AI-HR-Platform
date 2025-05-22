@@ -1,6 +1,7 @@
 import api from '@/app/services/api/api';
 import React, { useState, useEffect } from 'react';
 import { Briefcase, Users, BarChart2, Clock, CheckCircle, AlertCircle } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
 
 export default function Homme() {
   const [userinfo, setUserInfo] = useState(null);
@@ -10,6 +11,7 @@ export default function Homme() {
     pendingApplications: 0,
     acceptedApplications: 0
   });
+  const navigate = useNavigate();
 
   const getUserInfo = async () => {
     try {
@@ -22,12 +24,13 @@ export default function Homme() {
 
   const getStats = async () => {
     try {
-      // Ici, vous devrez implémenter les appels API pour récupérer les vraies statistiques
+      // Remplacez ceci par vos vrais endpoints API
+      const res = await api.get('/recruiter/stats');
       setStats({
-        totalApplications: 75,
-        activeJobs: 12,
-        pendingApplications: 25,
-        acceptedApplications: 15
+        totalApplications: res.data.totalApplications,
+        activeJobs: res.data.activeJobs,
+        pendingApplications: res.data.pendingApplications,
+        acceptedApplications: res.data.acceptedApplications
       });
     } catch (error) {
       console.error('Erreur lors de la récupération des statistiques:', error);
@@ -40,7 +43,7 @@ export default function Homme() {
   }, []);
 
   return (
-    <div className='flex flex-col h-full p-6 bg-gray-50'>
+    <div className='flex flex-col h-full p-6 bg-gray-50 mt-20'>
       {/* En-tête avec salutation */}
       <div className='mb-8'>
         <h1 className='text-3xl font-bold text-gray-900'>
@@ -114,7 +117,10 @@ export default function Homme() {
           <p className='text-gray-600 mb-4'>
             Publiez une nouvelle offre d'emploi pour attirer les meilleurs talents.
           </p>
-          <button className='bg-blue-600 text-white px-6 py-2 rounded-lg hover:bg-blue-700 transition duration-300'>
+          <button
+            className='bg-blue-600 text-white px-6 py-2 rounded-lg hover:bg-blue-700 transition duration-300'
+            onClick={() => navigate('/recruteur/offres/nouvelle')}
+          >
             Créer une offre
           </button>
         </div>
@@ -125,7 +131,10 @@ export default function Homme() {
           <p className='text-gray-600 mb-4'>
             Consultez et gérez les candidatures reçues pour vos offres.
           </p>
-          <button className='bg-gray-100 text-gray-700 px-6 py-2 rounded-lg hover:bg-gray-200 transition duration-300'>
+          <button
+            className='bg-gray-100 text-gray-700 px-6 py-2 rounded-lg hover:bg-gray-200 transition duration-300'
+            onClick={() => navigate('/recruteur/candidatures')}
+          >
             Voir les candidatures
           </button>
         </div>
