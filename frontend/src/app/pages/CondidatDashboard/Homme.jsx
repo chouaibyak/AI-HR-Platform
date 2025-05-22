@@ -26,11 +26,9 @@ export default function HommeCandidat({ onNavigate }) {
         throw new Error('Utilisateur non connecté');
       }
 
-      const candidateId = user.uid; // Utilisez uid au lieu de id
-      console.log('ID candidat:', candidateId); // Debug
-
       // 2. Récupérer les candidatures
-      const applicationsRes = await apiApplication.get(`/applications/candidate/${candidateId}`);
+      const applicationsRes = await apiApplication.get(`/applications/candidate/${user.uid}`);
+      console.log("Réponse API:", applicationsRes.data);
       const applications = applicationsRes.data || [];
 
       // 3. Calculer les statistiques

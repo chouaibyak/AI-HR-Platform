@@ -138,7 +138,7 @@ def update_application_status(application_id):
         if not new_status:
             return jsonify({'error': 'Le statut est requis'}), 400
             
-        if new_status not in ['accepted', 'rejected', 'pending', 'interview']:
+        if new_status not in ['accepted', 'rejected', 'pending']:
             return jsonify({'error': 'Statut invalide'}), 400
 
         # Vérifier si la candidature existe
