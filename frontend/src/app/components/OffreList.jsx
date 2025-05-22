@@ -63,26 +63,19 @@ export default function OffreList() {
     const currentUser = auth.currentUser;
 
     if (!storedCV) {
-      alert("Veuillez d'abord déposer votre CV via l'onglet 'Déposez votre CV'");
+      alert("Veuillez d'abord déposer votre CV");
       return;
     }
 
     try {
-      const filenameToUse = storedCV;
-      if (!filenameToUse) {
-        alert("Veuillez d'abord déposer votre CV via l'onglet 'Déposez votre CV'");
-        return;
-      }
-
       await apiApplication.post('/applications', {
         job_id: jobId,
         job_title: jobTitle,
         candidate_id: currentUser.uid,
         candidate_name: currentUser.displayName || 'Anonyme',
-        cv_url: filenameToUse
+        cv_url: storedCV
       });
-
-      alert('Candidature envoyée avec succès!');
+      alert('Candidature envoyée!');
     } catch (error) {
       console.error('Erreur:', error);
       alert('Erreur lors de la candidature');

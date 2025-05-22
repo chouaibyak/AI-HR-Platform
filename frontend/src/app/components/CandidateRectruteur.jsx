@@ -9,133 +9,57 @@ export default function CandidatRecruteur() {
   const [applications, setApplications] = useState([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(null)
-  const [refreshing, setRefreshing] = useState(false)
 
   const fetchApplications = async () => {
     try {
-      setRefreshing(true)
-      const currentUser = auth.currentUser
+      setLoading(true);
+      setError(null);
+      const currentUser = auth.currentUser;
+
       if (!currentUser) {
-        console.error("Aucun utilisateur connecté")
-        setError("Vous devez être connecté pour voir les candidatures")
-        return
+        setError("Veuillez vous connecter");
+        setLoading(false);
+        return;
       }
 
-      console.log("\n=== DÉBUT DE LA RÉCUPÉRATION DES CANDIDATURES ===")
-      console.log("ID du recruteur:", currentUser.uid)
+      console.log("Fetching applications for recruiter:", currentUser.uid);
 
-      // Récupérer les jobs du recruteur
-      console.log("1. Récupération des jobs du recruteur...")
-      try {
-        const jobsResponse = await apiJob.get(`/jobs/recruiter/${currentUser.uid}`)
-        console.log("Réponse brute des jobs:", jobsResponse)
-        const recruiterJobs = jobsResponse.data
-        console.log("Jobs trouvés:", recruiterJobs)
+      // Deux méthodes de récupération selon votre préférence
+      const response = await apiApplication.get(`/applications/recruiter/${currentUser.uid}`);
+      console.log("API response data:", response.data);
 
-        if (!recruiterJobs || !Array.isArray(recruiterJobs) || recruiterJobs.length === 0) {
-          console.log("Aucun job trouvé pour ce recruteur")
-          setApplications([])
-          setError(null)
-          return
-        }
+      // Transformation des données pour s'assurer que tous les champs requis existent
+      const validatedData = response.data.map(app => {
+        // Debug: Afficher la structure complète de l'application
+        console.log("Raw application data:", app);
 
-        // Récupérer toutes les candidatures
-        console.log("2. Récupération des candidatures pour chaque job...")
-        const allApplications = []
-        for (const job of recruiterJobs) {
-          try {
-            console.log(`Récupération des candidatures pour le job ${job.id} (${job.title})`)
-            const response = await apiApplication.get(`/applications/job/${job.id}`)
-            console.log(`Réponse brute pour le job ${job.id}:`, response)
-            console.log(`Candidatures trouvées pour le job ${job.id}:`, response.data)
+        return {
+          id: app.id,
+          job_id: app.job?.id || app.job_id || "",
+          job_title: app.job?.title || app.job_title || "Titre non spécifié",
+          candidate_name: app.candidate?.name || app.candidate_name || "Candidat inconnu",
+          company: app.job?.company || app.company || "Entreprise non spécifiée",
+          status: app.status || "pending",
+          cv_url: app.cv_url || "",
+          created_at: app.created_at || new Date().toISOString(),
+          matchScore: app.matchScore || 0
+        };
+      });
 
-            if (response.data && Array.isArray(response.data) && response.data.length > 0) {
-              const jobApplications = response.data.map(app => ({
-                ...app,
-                job_title: job.title,
-                company: job.company
-              }))
-              console.log(`Candidatures enrichies pour le job ${job.id}:`, jobApplications)
-              allApplications.push(...jobApplications)
-            } else {
-              console.log(`Aucune candidature trouvée pour le job ${job.id}`)
-            }
-          } catch (error) {
-            console.error(`Erreur lors de la récupération des candidatures pour le job ${job.id}:`, error)
-            if (error.response) {
-              console.error("Données d'erreur:", error.response.data)
-              console.error("Statut de l'erreur:", error.response.status)
-            }
-          }
-        }
+      console.log("Validated data:", validatedData);
+      setApplications(validatedData);
 
-        console.log("3. Total des candidatures trouvées:", allApplications.length)
-        console.log("Détail des candidatures:", allApplications)
-
-        if (allApplications.length === 0) {
-          console.log("Aucune candidature trouvée")
-          setApplications([])
-          setError(null)
-          return
-        }
-
-        // Récupérer les scores de matching pour chaque candidature
-        console.log("4. Récupération des scores de matching...")
-        const applicationsWithScores = await Promise.all(
-          allApplications.map(async (app) => {
-            try {
-              const cvId = app.cv_url.split('_')[0]
-              console.log(`Récupération du score pour CV ${cvId} et job ${app.job_id}`)
-              const scoreResponse = await fetch(`http://localhost:5004/match/${cvId}/${app.job_id}`)
-              const scoreData = await scoreResponse.json()
-              console.log(`Score trouvé pour la candidature ${app.id}:`, scoreData)
-              return {
-                ...app,
-                matchScore: scoreData.match_score || 0
-              }
-            } catch (error) {
-              console.error(`Erreur lors de la récupération du score pour la candidature ${app.id}:`, error)
-              return {
-                ...app,
-                matchScore: 0
-              }
-            }
-          })
-        )
-
-        // Trier les candidatures par score décroissant
-        const sortedApplications = applicationsWithScores.sort((a, b) => {
-          // Si l'une est en attente et l'autre acceptée/refusée, prioriser celle en attente
-          if (a.status === 'pending' && (b.status === 'accepted' || b.status === 'rejected')) return -1;
-          if ((a.status === 'accepted' || a.status === 'rejected') && b.status === 'pending') return 1;
-
-          // Si les deux sont dans le même état, trier par score
-          return b.matchScore - a.matchScore;
-        });
-        console.log("5. Candidatures triées:", sortedApplications)
-        setApplications(sortedApplications)
-        setError(null)
-      } catch (error) {
-        console.error("Erreur lors de la récupération des jobs:", error)
-        if (error.response) {
-          console.error("Données d'erreur:", error.response.data)
-          console.error("Statut de l'erreur:", error.response.status)
-        }
-        setError("Impossible de récupérer les jobs. Veuillez réessayer plus tard.")
-      }
     } catch (error) {
-      console.error("Erreur lors de la récupération des candidatures:", error)
-      if (error.response) {
-        console.error("Données d'erreur:", error.response.data)
-        console.error("Statut de l'erreur:", error.response.status)
-      }
-      setError("Impossible de récupérer les candidatures. Veuillez réessayer plus tard.")
+      console.error("Detailed error:", {
+        message: error.message,
+        response: error.response?.data,
+        stack: error.stack
+      });
+      setError("Erreur lors du chargement des candidatures");
     } finally {
-      setLoading(false)
-      setRefreshing(false)
-      console.log("=== FIN DE LA RÉCUPÉRATION DES CANDIDATURES ===\n")
+      setLoading(false);
     }
-  }
+  };
 
   // Ajouter un bouton de rafraîchissement
   const handleRefresh = () => {
@@ -144,13 +68,16 @@ export default function CandidatRecruteur() {
 
   // Charger les candidatures au montage du composant et toutes les 30 secondes
   useEffect(() => {
-    console.log("Initialisation du composant CandidatRecruteur")
-    fetchApplications()
+    const unsubscribe = auth.onAuthStateChanged((user) => {
+      if (user) {
+        fetchApplications();
+      } else {
+        setError("Utilisateur non authentifié");
+        setLoading(false);
+      }
+    });
 
-    // Rafraîchir toutes les 30 secondes
-    const interval = setInterval(fetchApplications, 30000)
-
-    return () => clearInterval(interval)
+    return () => unsubscribe();
   }, [])
 
   const handleStatusUpdate = async (applicationId, newStatus) => {
@@ -274,35 +201,49 @@ export default function CandidatRecruteur() {
                 .filter(candidature => candidature.status === 'pending')
                 .map((candidature) => (
                   <div key={candidature.id} className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
-                    <div className="flex justify-between items-start ">
+                    <div className="flex justify-between items-start">
                       <div>
                         <h3 className="text-lg font-semibold">{candidature.job_title}</h3>
-                        <p className="text-gray-600">{candidature.candidate_name}</p>
-                        <p className="text-sm text-gray-500">
+
+                        {/* Section Candidat - clairement identifiée */}
+                        <div className="mt-2">
+                          <p className="font-medium text-gray-700">Candidat:</p>
+                          <p className="text-gray-600">{candidature.candidate_name}</p>
+                        </div>
+
+                        {/* Section Job - clairement identifiée */}
+                        <div className="mt-2">
+                          <p className="font-medium text-gray-700">Offre:</p>
+                          <p className="text-gray-600">{candidature.job_title} - {candidature.company}</p>
+                        </div>
+
+                        <p className="text-sm text-gray-500 mt-2">
                           Postulé le {formatDate(candidature.created_at)}
                         </p>
+
                         <div className="mt-4">
                           <span className={`px-3 py-1 rounded-full text-sm font-medium ${getScoreColor(candidature.matchScore)}`}>
-                            Score de matching : {candidature.matchScore}%
+                            Score: {candidature.matchScore}%
                           </span>
                         </div>
                       </div>
-                      <div className="flex gap-2  ">
+
+                      <div className="flex gap-2">
                         <button
                           onClick={() => handleStatusUpdate(candidature.id, 'accepted')}
-                          className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-green-600"
+                          className="bg-green-600 text-white px-4 py-2 rounded hover:bg-green-700"
                         >
                           Accepter
                         </button>
                         <button
                           onClick={() => handleStatusUpdate(candidature.id, 'rejected')}
-                          className="bg-gray-400 text-white px-4 py-2 rounded hover:bg-red-600"
+                          className="bg-red-600 text-white px-4 py-2 rounded hover:bg-red-700"
                         >
                           Refuser
                         </button>
                         <button
                           onClick={() => window.open(candidature.cv_url, '_blank')}
-                          className=" text-blue-700 px-4 py-2 rounded underline "
+                          className="text-blue-700 px-4 py-2 rounded underline"
                         >
                           Voir CV
                         </button>
@@ -322,48 +263,40 @@ export default function CandidatRecruteur() {
                 .map((candidature) => {
                   const statusConfig = getStatusConfig(candidature.status);
                   return (
-                    <div
-                      key={candidature.id}
-                      className="bg-white rounded-lg shadow-sm border border-gray-200 hover:shadow-md transition-shadow duration-200"
-                    >
-                      <div className="p-6">
-                        <div className="flex items-start justify-between">
-                          <div className="flex-1">
-                            <h2 className="text-xl font-semibold text-gray-900 mb-2">
-                              {candidature.job_title}
-                            </h2>
-                            <div className="flex items-center text-sm text-gray-500 mb-4">
-                              <span>{candidature.candidate_name}</span>
-                              <span className="mx-2">•</span>
-                              <span>{formatDate(candidature.created_at)}</span>
+                    <div key={candidature.id} className="bg-white rounded-lg border p-6">
+                      <div className="flex justify-between">
+                        <div>
+                          <h3 className="text-lg font-semibold">{candidature.job_title}</h3>
+
+                          <div className="grid grid-cols-2 gap-4 mt-3">
+                            <div>
+                              <p className="font-medium text-sm text-gray-500">Candidat</p>
+                              <p>{candidature.candidate_name}</p>
                             </div>
-                            <div className="flex items-center space-x-4">
-                              <span className={`inline-flex items-center px-3 py-1 rounded-full text-sm font-medium border ${statusConfig.color}`}>
-                                {statusConfig.icon}
-                                <span className="ml-1.5">{statusConfig.text}</span>
-                              </span>
-                              <span className={`px-3 py-1 rounded-full text-sm font-medium ${getScoreColor(candidature.matchScore)}`}>
-                                Score de matching : {candidature.matchScore}%
-                              </span>
+                            <div>
+                              <p className="font-medium text-sm text-gray-500">Entreprise</p>
+                              <p>{candidature.company}</p>
                             </div>
                           </div>
-                          <div className="flex gap-3">
-                            <button
-                              onClick={() => {
-                                const cvData = localStorage.getItem(candidature.cv_url);
-                                if (cvData) {
-                                  const blob = new Blob([cvData], { type: 'application/pdf' });
-                                  const url = URL.createObjectURL(blob);
-                                  window.open(url, '_blank');
-                                } else {
-                                  alert('CV non trouvé dans le stockage local');
-                                }
-                              }}
-                              className="text-blue-600 hover:text-blue-800 px-4 py-2"
-                            >
-                              Voir le CV
-                            </button>
+
+                          <div className="mt-4 flex gap-4">
+                            <span className={`inline-flex items-center px-3 py-1 rounded-full text-sm ${statusConfig.color}`}>
+                              {statusConfig.icon}
+                              <span className="ml-1.5">{statusConfig.text}</span>
+                            </span>
+                            <span className={`px-3 py-1 rounded-full text-sm ${getScoreColor(candidature.matchScore)}`}>
+                              Score: {candidature.matchScore}%
+                            </span>
                           </div>
+                        </div>
+
+                        <div className="flex items-center">
+                          <button
+                            onClick={() => window.open(candidature.cv_url, '_blank')}
+                            className="text-blue-600 hover:text-blue-800"
+                          >
+                            Voir CV
+                          </button>
                         </div>
                       </div>
                     </div>

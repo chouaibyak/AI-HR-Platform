@@ -17,64 +17,82 @@ CORS(app)
 def apply_to_job():
     try:
         data = request.get_json()
-        print("\n=== NOUVELLE CANDIDATURE ===")
-        print("Données reçues:", data)
         
+        # Validation des données requises
+        required_fields = ['job_id', 'job_title', 'candidate_id', 'candidate_name', 'cv_url']
+        if not all(field in data for field in required_fields):
+            return jsonify({'error': 'Données manquantes'}), 400
+
         # Vérifier si le job existe
         job_ref = db.collection('jobs').document(data['job_id'])
         job = job_ref.get()
         
         if not job.exists:
-            print(f"ERREUR: Le job {data['job_id']} n'existe pas")
             return jsonify({'error': 'Job non trouvé'}), 404
             
-        print(f"Job trouvé: {job.to_dict()}")
-        
-        # Récupérer l'ID du recruteur depuis le job
         job_data = job.to_dict()
-        recruiter_id = job_data.get('recruiter_id')
-        print(f"ID du recruteur trouvé: {recruiter_id}")
         
-        if not recruiter_id:
-            print("ERREUR: Aucun ID de recruteur trouvé dans le job")
+        # Vérification des IDs
+        if 'recruiter_id' not in job_data:
             return jsonify({'error': 'Job invalide: aucun recruteur associé'}), 400
-        
-        application_id = str(uuid.uuid4())
+
+        # Création de la candidature avec des champs bien séparés
         application = {
-            'id': application_id,
-            'job_id': data['job_id'],
-            'job_title': data['job_title'],
-            'candidate_id': data['candidate_id'],
-            'candidate_name': data['candidate_name'],
+            'id': str(uuid.uuid4()),
+            'job': {  # Sous-objet pour les infos du job
+                'id': data['job_id'],
+                'title': data['job_title'],
+                'recruiter_id': job_data['recruiter_id'],
+                'recruiter_name': job_data.get('recruiter_name', ''),
+                'company': job_data.get('company', '')
+            },
+            'candidate': {  # Sous-objet pour les infos du candidat
+                'id': data['candidate_id'],
+                'name': data['candidate_name']
+            },
             'cv_url': data['cv_url'],
             'created_at': datetime.utcnow().isoformat(),
-            'status': 'pending',
-            'recruiter_id': recruiter_id,
-            'company': job_data.get('company', '')  # Ajout du nom de l'entreprise
+            'status': 'pending'
         }
         
-        print("Candidature à enregistrer:", application)
-        db.collection('applications').document(application_id).set(application)
-        print("Candidature enregistrée avec succès")
+        db.collection('applications').document(application['id']).set(application)
         return jsonify(application), 201
     except Exception as e:
-        print("Erreur lors de la création de la candidature:", str(e))
         return jsonify({'error': str(e)}), 500
 
 # GET: récupérer toutes les candidatures pour un candidat
 @app.route('/applications/candidate/<candidate_id>', methods=['GET'])
 def get_candidate_applications(candidate_id):
     try:
-        print(f"\n=== RÉCUPÉRATION DES CANDIDATURES DU CANDIDAT {candidate_id} ===")
-        applications = db.collection('applications')\
-                        .where('candidate_id', '==', candidate_id)\
-                        .stream()
-        applications_list = [app.to_dict() for app in applications]
-        print(f"Candidatures trouvées: {len(applications_list)}")
-        print("Détail des candidatures:", applications_list)
-        return jsonify(applications_list), 200
+        # Version optimisée avec jointure
+        apps_ref = db.collection('applications')
+        query = apps_ref.where('candidate.id', '==', candidate_id).stream()
+        
+        applications = []
+        for doc in query:
+            app_data = doc.to_dict()
+            # Assurez-vous que la structure correspond au frontend
+            application = {
+                'id': doc.id,
+                'job': {
+                    'id': app_data.get('job', {}).get('id'),
+                    'title': app_data.get('job', {}).get('title'),
+                    'company': app_data.get('job', {}).get('company')
+                },
+                'candidate': {
+                    'id': app_data.get('candidate', {}).get('id'),
+                    'name': app_data.get('candidate', {}).get('name')
+                },
+                'status': app_data.get('status', 'pending'),
+                'cv_url': app_data.get('cv_url', ''),
+                'created_at': app_data.get('created_at', firestore.SERVER_TIMESTAMP)
+            }
+            applications.append(application)
+        
+        return jsonify(applications), 200
+        
     except Exception as e:
-        print(f"Erreur lors de la récupération des candidatures du candidat: {str(e)}")
+        print(f"Error in get_candidate_applications: {str(e)}")
         return jsonify({'error': str(e)}), 500
 
 # GET: récupérer toutes les candidatures pour un job
@@ -190,37 +208,20 @@ def delete_application(application_id):
 @app.route('/applications/recruiter/<recruiter_id>', methods=['GET'])
 def get_recruiter_applications(recruiter_id):
     try:
-        print(f"\n=== RÉCUPÉRATION DES CANDIDATURES DU RECRUTEUR {recruiter_id} ===")
-        
-        # Récupérer toutes les candidatures pour ce recruteur
-        applications = db.collection('applications')\
-                        .where('recruiter_id', '==', recruiter_id)\
-                        .stream()
+        # Solution optimale: Requête avec jointure
+        applications_ref = db.collection('applications')
+        query = applications_ref.where('job.recruiter_id', '==', recruiter_id).stream()
         
         applications_list = []
-        for app in applications:
+        for app in query:
             app_data = app.to_dict()
-            print(f"Candidature trouvée: {app_data}")
-            # Vérifier que toutes les données nécessaires sont présentes
-            if all(key in app_data for key in ['id', 'job_id', 'candidate_id', 'candidate_name', 'cv_url', 'status']):
-                applications_list.append(app_data)
-            else:
-                print(f"Candidature invalide (données manquantes): {app_data}")
-            
-        print(f"Nombre total de candidatures trouvées pour le recruteur {recruiter_id}: {len(applications_list)}")
-        if applications_list:
-            print("Détail des candidatures:")
-            for app in applications_list:
-                print(f"- ID: {app.get('id')}")
-                print(f"  Candidat: {app.get('candidate_name')}")
-                print(f"  Statut: {app.get('status')}")
-                print(f"  Date: {app.get('created_at')}")
-        else:
-            print(f"Aucune candidature trouvée pour le recruteur {recruiter_id}")
+            # Compléter les données si nécessaire
+            app_data['id'] = app.id
+            applications_list.append(app_data)
             
         return jsonify(applications_list), 200
     except Exception as e:
-        print(f"Erreur lors de la récupération des candidatures du recruteur: {str(e)}")
+        print(f"Error: {str(e)}")
         return jsonify({'error': str(e)}), 500
 
 if __name__ == '__main__':
