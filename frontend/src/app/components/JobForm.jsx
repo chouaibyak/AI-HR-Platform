@@ -3,6 +3,7 @@ import { PlusCircle } from 'lucide-react';
 import { auth } from '../firebase';
 import apiJob from '../services/api/apiJob';
 import JobList from './JobList';
+import { notifyNewJob } from '../services/api/apiNotification';
 
 export default function JobForm() {
   const [showForm, setShowForm] = useState(false);
@@ -54,6 +55,18 @@ export default function JobForm() {
       };
 
       const response = await apiJob.post('/jobs', jobToSend);
+      console.log('Réponse API création job:', response.data);
+      console.log("Données envoyées à notifyNewJob:", {
+        jobId: response.data.id,
+        jobTitle: jobValue.title,
+        company: jobValue.company
+      });
+
+      await notifyNewJob({
+        jobId: response.data.id,
+        jobTitle: jobValue.title,
+        company: jobValue.company
+      });
 
       // Si on arrive ici, c'est que la création a réussi
       setJobValue({

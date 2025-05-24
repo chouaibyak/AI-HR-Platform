@@ -46,7 +46,12 @@ def create_job():
     }
     job_ref.set(job_data)
     logger.debug(f"Job créé avec succès: {job_data}")
-    return jsonify(job_data), 201
+    # Forcez la réponse avec l'id
+    return jsonify({
+        'id': job_id,
+        'title': job_data['title'],
+        'company': job_data['company']
+    }), 201
 
 #  Lire toutes les offres
 @app.route('/jobs', methods=['GET'])

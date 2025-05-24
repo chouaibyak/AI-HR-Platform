@@ -47,7 +47,7 @@ export default function Homme() {
       {/* En-tête avec salutation */}
       <div className='mb-8'>
         <h1 className='text-3xl font-bold text-gray-900'>
-          Bonjour, {userinfo?.name || 'Recruteur'}
+          Bonjour, Recruteur
         </h1>
         <p className='text-gray-600 mt-2'>
           Bienvenue sur votre tableau de bord. Gérez vos offres et suivez vos candidatures.
