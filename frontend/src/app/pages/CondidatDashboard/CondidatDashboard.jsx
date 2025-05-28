@@ -8,6 +8,7 @@ import UploadCV from '@/app/components/UploadCV';
 import MesCandidatures from '@/app/components/MesCandidatures';
 import { auth } from '../../firebase';
 import { getUserNotifications } from '../../services/api/apiNotification';
+import OffreList from '@/app/components/OffreList';
 
 export default function CandidatDashboard() {
   const [showNotification, setNotification] = useState(false);
@@ -15,28 +16,28 @@ export default function CandidatDashboard() {
   const [showSideBar, setShowSideBar] = useState(true);
   const [activePage, setActivePage] = useState("homme");
   const [notificationCount, setNotificationCount] = useState(0);
+  const [loading, setLoading] = useState(true);
 
   // 🔁 Charger les notifications au montage du composant
+  const fetchNotifications = async () => {
+    const currentUser = auth.currentUser;
+    if (!currentUser) return;
+
+    try {
+      const data = await getUserNotifications(currentUser.uid);
+      const unred = data.filter(n => !n.read);
+      setNotificationCount(unred.length);
+    } catch (error) {
+      console.error("Erreurnlors du chargelent des notifications", error)
+    } finally {
+      setLoading(false)
+    }
+  }
+
   useEffect(() => {
-    const fetchNotifications = async () => {
-      const currentUser = auth.currentUser;
-      if (!currentUser) return;
-
-      try {
-        const data = await getUserNotifications(currentUser.uid);
-        console.log('Données reçues:', data); // 🔥 Debuggage
-
-        // ⚠️ Vérifiez que read est bien un booléen ou absent
-        const unread = data.filter(n => n.read === false || n.read === undefined);
-        console.log('Notifications non lues:', unread); // 🔥 Debuggage
-
-        setNotificationCount(unread.length);
-      } catch (error) {
-        console.error("Erreur lors du chargement des notifications", error);
-      }
-    };
-
     fetchNotifications();
+    const interval = setInterval(fetchNotifications, 10000);
+    return () => clearInterval(interval);
   }, []);
 
   return (
@@ -99,6 +100,7 @@ export default function CandidatDashboard() {
           {activePage === "profile" && <ProfilPage />}
           {activePage === "cv" && <UploadCV />}
           {activePage === "candidature" && <MesCandidatures />}
+          {activePage === "offre" && <OffreList />}
         </div>
 
       </div>

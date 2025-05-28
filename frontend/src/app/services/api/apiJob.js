@@ -14,7 +14,7 @@ apiJob.interceptors.request.use(
   async (config) => {
     const user = auth.currentUser;
     if (user) {
-      const token = await user.getIdToken();
+      const token = await user.getIdToken(true);
       config.headers.Authorization = `Bearer ${token}`;
     }
     return config;

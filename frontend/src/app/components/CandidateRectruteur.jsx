@@ -2,8 +2,11 @@ import React, { useEffect, useState } from 'react'
 import { auth } from '../firebase'
 import apiApplication from '../services/api/apiApplication'
 import apiJob from '../services/api/apiJob'
+import {
+  get_recruiter_applications,
+  updatApplicationStatus
+} from '../services/api/apiApplication'
 import { CheckCircle2, XCircle, Clock, AlertCircle, RefreshCw } from 'lucide-react'
-
 
 export default function CandidatRecruteur() {
   const [applications, setApplications] = useState([])
@@ -14,19 +17,16 @@ export default function CandidatRecruteur() {
     try {
       setLoading(true);
       setError(null);
-      const currentUser = auth.currentUser;
 
+      const currentUser = auth.currentUser;
       if (!currentUser) {
         setError("Veuillez vous connecter");
         setLoading(false);
         return;
       }
 
-      console.log("Fetching applications for recruiter:", currentUser.uid);
-
       // Deux méthodes de récupération selon votre préférence
       const response = await apiApplication.get(`/applications/recruiter/${currentUser.uid}`);
-      console.log("API response data:", response.data);
 
       // Transformation des données pour s'assurer que tous les champs requis existent
       const validatedData = response.data.map(app => {

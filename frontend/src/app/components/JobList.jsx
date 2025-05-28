@@ -1,6 +1,8 @@
 import React, { useEffect, useState } from 'react';
 import apiJob from '../services/api/apiJob';
 import { Trash2, Pencil } from 'lucide-react';
+import { auth } from '../firebase';
+
 
 export default function JobList() {
   const [jobs, setJobs] = useState([]);
@@ -15,11 +17,18 @@ export default function JobList() {
 
   const fetchJobs = async () => {
     try {
-      const response = await apiJob.get('/jobs');
+      const currentUser = auth.currentUser;
+      if (!currentUser) {
+        setError('Utilisateur non connecté');
+        return;
+      }
+
+      // Utilisez la route spécifique pour les jobs du recruteur
+      const response = await apiJob.get(`/jobs/recruiter/${currentUser.uid}`);
       setJobs(response.data);
     } catch (err) {
       console.error('Erreur lors du chargement des jobs :', err);
-      setError('Impossible de récupérer les offres.');
+      setError('Impossible de récupérer vos offres.');
     } finally {
       setLoading(false);
     }

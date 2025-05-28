@@ -48,6 +48,15 @@ export default function JobForm() {
         return;
       }
 
+      // Récupérez le token avec les claims
+      const tokenResult = await currentUser.getIdTokenResult(true);
+      console.log("Token complet:", tokenResult);
+
+      // 2. Debug complet
+      console.log("Token claims:", tokenResult.claims);
+      console.log("UID:", currentUser.uid);
+
+
       const jobToSend = {
         ...jobValue,
         skills: jobValue.skills.split(',').map(s => s.trim()),
@@ -55,12 +64,6 @@ export default function JobForm() {
       };
 
       const response = await apiJob.post('/jobs', jobToSend);
-      console.log('Réponse API création job:', response.data);
-      console.log("Données envoyées à notifyNewJob:", {
-        jobId: response.data.id,
-        jobTitle: jobValue.title,
-        company: jobValue.company
-      });
 
       await notifyNewJob({
         jobId: response.data.id,
@@ -84,7 +87,11 @@ export default function JobForm() {
 
     } catch (error) {
       console.error('Erreur lors de la création du job:', error);
-      setErrors({ submit: 'Une erreur est survenue lors de la création du job.' });
+      if (error.response?.status === 403) {
+        setErrors({ submit: 'Vous devez être recruteur pour publier une offre.' });
+      } else {
+        setErrors({ submit: 'Une erreur est survenue lors de la création du job.' });
+      }
     }
   };
 
