@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Search, Bell, PanelsTopLeft } from 'lucide-react';
 import ProfilMenu from './ProfilMenu';
 import ProfilPage from './ProfilPage';
@@ -8,11 +8,34 @@ import Homme from './Homme';
 import JobForm from '@/app/components/JobForm';
 import CandidateRectruteur from '@/app/components/CandidateRectruteur';
 
+// Import des fonctions d'API
+import { getUserNotifications } from '@/app/services/api/apiNotification'; // ✅ Assurez-vous que le chemin est correct
+import { auth } from '@/app/firebase'; // ✅ Firebase Auth
+
 export default function RecruteurDashboard() {
   const [showNotification, setNotification] = useState(false);
   const [showSearchBar, setShowSearchBar] = useState(false);
   const [showSideBar, setShowSideBar] = useState(true);
   const [activePage, setActivePage] = useState("homme");
+  const [unreadCount, setUnreadCount] = useState(0); // 👈 Compteur de notifications non lues
+
+  // Charger les notifications dès que l'utilisateur est connecté
+  useEffect(() => {
+    const fetchNotifications = async () => {
+      const currentUser = auth.currentUser;
+      if (!currentUser) return;
+
+      try {
+        const data = await getUserNotifications(currentUser.uid);
+        const unread = data.filter(n => !n.read);
+        setUnreadCount(unread.length);
+      } catch (error) {
+        console.error('Erreur lors de la récupération des notifications:', error);
+      }
+    };
+
+    fetchNotifications();
+  }, []);
 
   return (
     <div className='h-screen flex flex-col'>
@@ -38,9 +61,16 @@ export default function RecruteurDashboard() {
             </div>
           )}
 
-          <button className='cursor-pointer' onClick={() => setNotification(prev => !prev)}>
+          {/* Icône de notification avec compteur */}
+          <button className='relative cursor-pointer' onClick={() => setNotification(prev => !prev)}>
             <Bell className='text-amber-50' size={24} />
+            {unreadCount > 0 && (
+              <span className="absolute -top-1 -right-1 bg-red-500 text-white text-xs font-bold rounded-full h-5 w-5 flex items-center justify-center">
+                {unreadCount}
+              </span>
+            )}
           </button>
+
           {showNotification && (
             <div className='absolute right-2 top-14 z-50'>
               <Notificationbarre />
@@ -62,7 +92,7 @@ export default function RecruteurDashboard() {
         <div className=" overflow-y-auto w-full ml-64">
           {activePage === "homme" && <Homme />}
           {activePage === "profile" && <ProfilPage />}
-          {activePage === "jobs" && < JobForm />}
+          {activePage === "jobs" && <JobForm />}
           {activePage === "candidates" && <CandidateRectruteur />}
           {/* Ajoute d'autres pages ici selon les boutons de ta sidebar */}
         </div>

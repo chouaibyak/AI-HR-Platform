@@ -56,6 +56,25 @@ def apply_to_job():
         }
         
         db.collection('applications').document(application['id']).set(application)
+
+        # Création de la notification pour le recruteur
+        notification_id = str(uuid.uuid4())
+        notification = {
+            'id': notification_id,
+            'userId': job_data['recruiter_id'],
+            'type': 'NEW_APPLICATION',
+            'applicationId': application['id'],
+            'jobId': data['job_id'],
+            'jobTitle': data['job_title'],
+            'candidateName': data['candidate_name'],
+            'message': f"Nouvelle candidature pour {data['job_title']}",
+            'read': False,
+            'createdAt': datetime.utcnow()
+        }
+        
+        db.collection('notifications').document(notification_id).set(notification)
+        
+
         return jsonify(application), 201
     except Exception as e:
         return jsonify({'error': str(e)}), 500
