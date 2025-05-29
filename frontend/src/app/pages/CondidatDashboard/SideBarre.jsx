@@ -27,7 +27,7 @@ export default function SideBarre({ onNavigate }) {
       {/* Second group */}
       <ul className='mt-4 border-t'>
         <li onClick={() => onNavigate("offre")} className='flex items-center gap-2 p-2 w-full hover:bg-gray-100 cursor-pointer'><Handshake size={18} /> Offres d'emploi</li>
-        <li onClick={() => onNavigate("placements")} className='flex items-center gap-2 p-2 w-full hover:bg-gray-100 cursor-pointer'><UserCheck size={18} /> Placements</li>
+        <li onClick={() => onNavigate("placement")} className='flex items-center gap-2 p-2 w-full hover:bg-gray-100 cursor-pointer'><UserCheck size={18} /> Placements</li>
         <li onClick={() => onNavigate("contacts")} className='flex items-center gap-2 p-2 w-full hover:bg-gray-100 cursor-pointer'><Contact size={18} /> Contacts and Guests</li>
         <li onClick={() => onNavigate("activities")} className='flex items-center gap-2 p-2 w-full hover:bg-gray-100 cursor-pointer'><Calendar size={18} /> Activities</li>
         <li onClick={() => onNavigate("inbox")} className='flex items-center gap-2 p-2 w-full hover:bg-gray-100 cursor-pointer'><Inbox size={18} /> Inbox</li>

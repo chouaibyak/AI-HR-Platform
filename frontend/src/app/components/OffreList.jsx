@@ -82,7 +82,16 @@ export default function OffreList() {
     }
   };
 
-  if (loading) return <p className="text-center mt-10">Chargement des offres...</p>;
+  if (loading) {
+    return (
+      <div className="flex justify-center items-center min-h-screen">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto"></div>
+          <p className="mt-4 text-lg text-gray-600">Chargement des offres...</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="p-6 mt-20">

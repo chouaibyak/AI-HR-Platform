@@ -9,6 +9,7 @@ import MesCandidatures from '@/app/components/MesCandidatures';
 import { auth } from '../../firebase';
 import { getUserNotifications } from '../../services/api/apiNotification';
 import OffreList from '@/app/components/OffreList';
+import PlacementCandidate from '@/app/components/PlacementCandidate';
 
 export default function CandidatDashboard() {
   const [showNotification, setNotification] = useState(false);
@@ -101,6 +102,7 @@ export default function CandidatDashboard() {
           {activePage === "cv" && <UploadCV />}
           {activePage === "candidature" && <MesCandidatures />}
           {activePage === "offre" && <OffreList />}
+          {activePage === "placement" && <PlacementCandidate />}
         </div>
 
       </div>
