@@ -231,18 +231,18 @@ export default function CandidatRecruteur() {
                       <div className="flex gap-2">
                         <button
                           onClick={() => handleStatusUpdate(candidature.id, 'accepted')}
-                          className="bg-green-600 text-white px-4 py-2 rounded hover:bg-green-700"
+                          className="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600"
                         >
                           Accepter
                         </button>
                         <button
                           onClick={() => handleStatusUpdate(candidature.id, 'rejected')}
-                          className="bg-red-600 text-white px-4 py-2 rounded hover:bg-red-700"
+                          className="bg-gray-400 text-white px-4 py-2 rounded hover:bg-gray-500"
                         >
                           Refuser
                         </button>
                         <button
-                          onClick={() => window.open(candidature.cv_url, '_blank')}
+                          onClick={() => handleViewCV(candidature.cv_url)}
                           className="text-blue-700 px-4 py-2 rounded underline"
                         >
                           Voir CV
