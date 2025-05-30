@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Search, Bell, PanelsTopLeft } from 'lucide-react';
+import { Search, Bell, PanelsTopLeft, Contact } from 'lucide-react';
 import ProfilMenu from './ProfilMenu';
 import ProfilPage from './ProfilPage';
 import Notificationbarre from './Notificationbarre';
@@ -7,17 +7,16 @@ import SideBarre from './SideBarre';
 import Homme from './Homme';
 import JobForm from '@/app/components/JobForm';
 import CandidateRectruteur from '@/app/components/CandidateRectruteur';
-
-// Import des fonctions d'API
-import { getUserNotifications } from '@/app/services/api/apiNotification'; // ✅ Assurez-vous que le chemin est correct
-import { auth } from '@/app/firebase'; // ✅ Firebase Auth
+import { getUserNotifications } from '@/app/services/api/apiNotification';
+import { auth } from '@/app/firebase';
+import MatchesRec from '@/app/components/MatchesRec';
 
 export default function RecruteurDashboard() {
   const [showNotification, setNotification] = useState(false);
   const [showSearchBar, setShowSearchBar] = useState(false);
   const [showSideBar, setShowSideBar] = useState(true);
   const [activePage, setActivePage] = useState("homme");
-  const [unreadCount, setUnreadCount] = useState(0); // 👈 Compteur de notifications non lues
+  const [unreadCount, setUnreadCount] = useState(0);
 
   // Charger les notifications dès que l'utilisateur est connecté
   useEffect(() => {
@@ -94,7 +93,7 @@ export default function RecruteurDashboard() {
           {activePage === "profile" && <ProfilPage />}
           {activePage === "jobs" && <JobForm />}
           {activePage === "candidates" && <CandidateRectruteur />}
-          {/* Ajoute d'autres pages ici selon les boutons de ta sidebar */}
+          {activePage === "matches" && <MatchesRec />}
         </div>
 
       </div>
