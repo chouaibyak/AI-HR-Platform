@@ -11,6 +11,10 @@ import { getUserNotifications } from '../../services/api/apiNotification';
 import OffreList from '@/app/components/OffreList';
 import PlacementCandidate from '@/app/components/PlacementCandidate';
 import Contact from '@/app/components/Contact';
+import RapportCandidat from '@/app/components/RapportCandidat';
+import InboxCandidat from '@/app/components/InboxCandidat';
+import Settings from './Settings';
+import ActivateCandidat from '@/app/components/ActivateCandidat';
 
 export default function CandidatDashboard() {
   const [showNotification, setNotification] = useState(false);
@@ -105,6 +109,10 @@ export default function CandidatDashboard() {
           {activePage === "offre" && <OffreList />}
           {activePage === "placement" && <PlacementCandidate />}
           {activePage === "contact" && <Contact />}
+          {activePage === "rapport" && <RapportCandidat />}
+          {activePage === "inbox" && <InboxCandidat />}
+          {activePage === "settings" && <Settings />}
+          {activePage === "activite" && <ActivateCandidat />}
         </div>
 
       </div>

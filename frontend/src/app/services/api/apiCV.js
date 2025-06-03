@@ -13,7 +13,7 @@ const apiCV = {
     if (!response.ok) {
       const errorText = await response.text();
       console.error('Erreur serveur:', errorText);
-      throw new Error('Erreur lors de l’envoi du CV');
+      throw new Error("Erreur lors de l'envoi du CV");
     }
 
     return response.json();
@@ -56,14 +56,19 @@ const apiCV = {
     }
   },
 
-
-
   getAllAnalyses: async () => {
     const res = await fetch('http://127.0.0.1:5003/analyses');
     if (!res.ok) throw new Error("Erreur récupération analyses");
     return res.json();
   },
 
+  get: async (url) => {
+    const response = await fetch(url);
+    if (!response.ok) {
+      throw new Error(`Erreur lors de la requête GET: ${response.statusText}`);
+    }
+    return response.json();
+  },
 };
 
 export default apiCV;
