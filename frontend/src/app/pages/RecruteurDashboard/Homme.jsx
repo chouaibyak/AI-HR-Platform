@@ -11,7 +11,7 @@ export default function Homme({ onNavigate }) {
   const [userinfo, setUserInfo] = useState(null);
   const [stats, setStats] = useState({
     totalApplications: 0,
-    activeJobs: 0,
+    totalJobs: 0, // Changé de activeJobs à totalJobs
     pendingApplications: 0,
     acceptedApplications: 0
   });
@@ -44,8 +44,8 @@ export default function Homme({ onNavigate }) {
       const jobs = jobsResponse.data || [];
       console.log("Offres récupérées:", jobs);
 
-      const activeJobs = jobs.filter(job => job.status === 'active').length;
-      console.log("Offres actives calculées:", activeJobs);
+      const totalJobs = jobs.length;
+      console.log("Nombre total d'offres:", totalJobs);
 
       const applicationsResponse = await apiApplication.get(`/applications/recruiter/${currentUser.uid}`);
       const applications = applicationsResponse.data || [];
@@ -57,14 +57,14 @@ export default function Homme({ onNavigate }) {
 
       console.log("Statistiques calculées:", {
         totalApplications,
-        activeJobs,
+        totalJobs, // Changé de activeJobs à totalJobs
         pendingApplications,
         acceptedApplications
       });
 
       setStats({
         totalApplications,
-        activeJobs,
+        totalJobs, // Changé de activeJobs à totalJobs
         pendingApplications,
         acceptedApplications
       });
@@ -88,7 +88,7 @@ export default function Homme({ onNavigate }) {
         setLoading(false);
         setStats({
           totalApplications: 0,
-          activeJobs: 0,
+          totalJobs: 0, // Changé de activeJobs à totalJobs
           pendingApplications: 0,
           acceptedApplications: 0
         });
@@ -164,12 +164,12 @@ export default function Homme({ onNavigate }) {
           </div>
         </div>
 
-        {/* Offres actives */}
+        {/* Total des offres */}
         <div className='bg-white rounded-xl shadow-sm p-6 border border-gray-100 hover:shadow-md transition-shadow duration-300'>
           <div className='flex items-center justify-between'>
             <div>
-              <p className='text-sm text-gray-500 mb-1'>Offres actives</p>
-              <h3 className='text-2xl font-bold text-gray-900'>{stats.activeJobs}</h3>
+              <p className='text-sm text-gray-500 mb-1'>Total des offres</p> {/* Changé de "Offres actives" */}
+              <h3 className='text-2xl font-bold text-gray-900'>{stats.totalJobs}</h3> {/* Changé de activeJobs à totalJobs */}
             </div>
             <div className='bg-green-50 p-3 rounded-lg'>
               <Briefcase className='w-6 h-6 text-green-600' />
@@ -214,7 +214,7 @@ export default function Homme({ onNavigate }) {
           </p>
           <button
             className='bg-blue-600 text-white px-6 py-2 rounded-lg hover:bg-blue-700 transition duration-300'
-            onClick={() => onNavigate && onNavigate('create-job')}
+            onClick={() => onNavigate('jobs')} // Changé de 'create-job' à 'jobs'
           >
             Créer une offre
           </button>
@@ -228,7 +228,7 @@ export default function Homme({ onNavigate }) {
           </p>
           <button
             className='bg-gray-100 text-gray-700 px-6 py-2 rounded-lg hover:bg-gray-200 transition duration-300'
-            onClick={() => onNavigate && onNavigate('manage-applications')}
+            onClick={() => onNavigate('candidates')} // Changé de 'manage-applications' à 'candidates'
           >
             Voir les candidatures
           </button>
