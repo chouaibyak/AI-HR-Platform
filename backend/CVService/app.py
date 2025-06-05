@@ -1,11 +1,11 @@
-from flask import Flask, Blueprint, request, jsonify, send_from_directory
+from flask import Flask, Blueprint, request, jsonify, send_from_directory, send_file
 import os
 import uuid
 from flask_cors import CORS
 import firebase_admin
 from firebase_admin import credentials, firestore
 from datetime import datetime
-
+from urllib.parse import unquote
 
 # Initialiser Firebase une seule fois
 cred = credentials.Certificate("../../firebase/firebase_admin_key.json") 
@@ -60,10 +60,42 @@ def delete_cv(filename):
     else:
         return jsonify({'error': 'Fichier introuvable'}), 404
 
+#view CV
+@cv_bp.route('/view/<uuid_part>', methods=['GET'])
+def view_cv(uuid_part):
+    try:
+        # Cherche le fichier qui commence par l'UUID fourni
+        matching_files = [f for f in os.listdir(UPLOAD_FOLDER) 
+                        if f.startswith(uuid_part)]
+        
+        if not matching_files:
+            return jsonify({
+                'error': 'File not found',
+                'debug_info': {
+                    'requested_uuid': uuid_part,
+                    'available_files': os.listdir(UPLOAD_FOLDER)
+                }
+            }), 404
+
+        if len(matching_files) > 1:
+            print(f"Attention : plusieurs fichiers correspondent à l'UUID {uuid_part}")
+
+        filepath = os.path.join(UPLOAD_FOLDER, matching_files[0])
+        return send_file(filepath, mimetype='application/pdf', as_attachment=False)
+        
+    except Exception as e:
+        print(f"Erreur : {str(e)}")
+        return jsonify({'error': str(e)}), 500
 
 # Configuration de l'application Flask
 app = Flask(__name__)
-CORS(app)  # 👈 active le CORS
+CORS(app, resources={
+    r"/cv/*": {
+        "origins": ["http://localhost:3000"],  # Remplacez par l'URL de votre frontend
+        "methods": ["GET", "POST", "PUT", "DELETE"],
+        "allow_headers": ["Content-Type"]
+    }
+})
 
 app.register_blueprint(cv_bp, url_prefix='/cv')
 
