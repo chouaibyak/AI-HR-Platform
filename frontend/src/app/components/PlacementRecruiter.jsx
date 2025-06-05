@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { CheckCircle2, User, Briefcase, Calendar, Sparkles, Trophy } from 'lucide-react';
+import { CheckCircle2, User, Briefcase, Calendar, Sparkles, Trophy, FileText } from 'lucide-react';
 import { auth } from '../firebase';
 import apiApplication from '../services/api/apiApplication';
 
@@ -31,6 +31,19 @@ export default function PlacementRecruiter() {
     } finally {
       setLoading(false);
     }
+  };
+
+  const handleViewCV = (cvFilename) => {
+    if (!cvFilename) {
+      alert("Aucun CV disponible");
+      return;
+    }
+
+    const apiBaseUrl = process.env.REACT_APP_API_URL || 'http://localhost:5001';
+    const uuidPart = cvFilename.split('_')[0];
+    const encodedFilename = encodeURIComponent(uuidPart);
+
+    window.open(`${apiBaseUrl}/cv/view/${encodedFilename}`, '_blank');
   };
 
   useEffect(() => {
@@ -155,17 +168,18 @@ export default function PlacementRecruiter() {
                 {/* Boutons d'action améliorés */}
                 <div className="flex flex-col ml-6 space-y-3 min-w-[140px]">
                   <button
-                    onClick={() => window.open(application.cv_url, '_blank')}
-                    className="bg-white text-blue-600 px-4 py-2 rounded-lg hover:bg-blue-50 text-sm font-medium border border-blue-200 transition-all duration-200 shadow-sm hover:shadow-md"
+                    onClick={() => handleViewCV(application.cv_url)}
+                    className="bg-white text-blue-600 px-4 py-2 rounded-lg hover:bg-blue-50 text-sm font-medium border border-blue-200 transition-all duration-200 shadow-sm hover:shadow-md flex items-center justify-center"
                   >
-                    📄 Voir CV
+                    <FileText className="w-4 h-4 mr-2" />
+                    Voir CV
                   </button>
-                  <button
+                  {/* <button
                     onClick={() => alert('Planifier un entretien')}
                     className="bg-gradient-to-r from-green-600 to-green-700 hover:from-green-700 hover:to-green-800 text-white px-4 py-2 rounded-lg text-sm font-medium transition-all duration-200 shadow-lg hover:shadow-xl"
                   >
-                    📅 Planifier entretien
-                  </button>
+                    Planifier entretien
+                  </button> */}
                 </div>
               </div>
             </div>

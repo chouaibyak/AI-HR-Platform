@@ -44,6 +44,22 @@ export default function MatchesRec() {
     }
   };
 
+  const handleViewCV = (cvFilename) => {
+    if (!cvFilename) {
+      alert("Aucun CV disponible");
+      return;
+    }
+
+    // Solution 1 : Via l'API Flask (recommandé)
+    const apiBaseUrl = process.env.REACT_APP_API_URL || 'http://localhost:5001';
+
+    // Extraire seulement la partie UUID si le nom contient des underscores
+    const uuidPart = cvFilename.split('_')[0];
+    const encodedFilename = encodeURIComponent(uuidPart);
+
+    window.open(`${apiBaseUrl}/cv/view/${encodedFilename}`, '_blank');
+  };
+
   useEffect(() => {
     fetchMatches();
   }, []);
@@ -140,7 +156,7 @@ export default function MatchesRec() {
               </div>
               <div className="grid gap-6">
                 {acceptedApps.map((app) => (
-                  <ApplicationCard key={app.id} application={app} status="accepted" />
+                  <ApplicationCard key={app.id} application={app} status="accepted" onViewCV={handleViewCV} />
                 ))}
               </div>
             </div>
@@ -160,7 +176,7 @@ export default function MatchesRec() {
               </div>
               <div className="grid gap-6">
                 {rejectedApps.map((app) => (
-                  <ApplicationCard key={app.id} application={app} status="rejected" />
+                  <ApplicationCard key={app.id} application={app} status="rejected" onViewCV={handleViewCV} />
                 ))}
               </div>
             </div>
@@ -171,7 +187,7 @@ export default function MatchesRec() {
   );
 }
 
-function ApplicationCard({ application, status }) {
+function ApplicationCard({ application, status, onViewCV }) {
   const statusConfig = {
     accepted: {
       icon: <CheckCircle2 className="w-5 h-5 text-green-600" />,
@@ -267,18 +283,19 @@ function ApplicationCard({ application, status }) {
         <div className="flex flex-col ml-6 space-y-3 min-w-[140px]">
           {application.cv_url && (
             <button
-              onClick={() => window.open(application.cv_url, '_blank')}
-              className="bg-white text-blue-600 px-4 py-2 rounded-lg hover:bg-blue-50 text-sm font-medium border border-blue-200 transition-all duration-200 shadow-sm hover:shadow-md"
+              onClick={() => onViewCV(application.cv_url)}
+              className="bg-white text-blue-600 px-4 py-2 rounded-lg hover:bg-blue-50 text-sm font-medium border border-blue-200 transition-all duration-200 shadow-sm hover:shadow-md flex items-center justify-center"
             >
-              📄 Voir CV
+              <FileText className="w-4 h-4 mr-2" />
+              Voir CV
             </button>
           )}
-          <button
+          {/* <button
             onClick={handleAction}
             className={`${statusConfig[status].btnClass} text-white px-4 py-2 rounded-lg text-sm font-medium transition-all duration-200`}
           >
             {statusConfig[status].btnText}
-          </button>
+          </button> */}
         </div>
       </div>
     </div>

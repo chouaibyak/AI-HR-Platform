@@ -291,7 +291,7 @@ const RapportRecruiter = () => {
   }
 
   return (
-    <div className="p-6 max-w-7xl mx-auto">
+    <div className="p-6 max-w-7xl mx-auto mt-20">
       <div className="mb-6">
         <h2 className="text-3xl font-bold text-gray-900">Rapport Recruteur</h2>
         <p className="mt-2 text-gray-600">Tableau de bord des candidatures et analyses</p>

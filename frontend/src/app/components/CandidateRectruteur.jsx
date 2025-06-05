@@ -107,9 +107,10 @@ export default function CandidatRecruteur() {
   };
 
   const handleViewCV = (cvUrl) => {
-    if (cvUrl) {
-      window.open(cvUrl, '_blank');
-    }
+    // Extrait seulement la partie UUID du nom complet
+    const uuidPart = cvUrl.split('_')[0]; // Prend tout avant le premier '_'
+    const apiUrl = process.env.REACT_APP_API_URL || 'http://localhost:5001';
+    window.open(`${apiUrl}/cv/view/${uuidPart}`, '_blank');
   };
 
   const getScoreColor = (score) => {
