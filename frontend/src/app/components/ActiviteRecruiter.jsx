@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Briefcase, User, MessageSquare, Calendar, FileText, CheckCircle2, XCircle } from 'lucide-react';
+import { Briefcase, User, MessageSquare, Calendar, FileText, CheckCircle2, XCircle, Activity, Clock } from 'lucide-react';
 import { auth, db } from '../firebase';
 import { collection, getDocs } from 'firebase/firestore';
 import apiApplication from '../services/api/apiApplication';
@@ -96,8 +96,11 @@ const ActiviteRecruiter = () => {
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center min-h-screen">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
+      <div className="flex items-center justify-center min-h-screen bg-gradient-to-br from-slate-50 to-purple-50">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-16 w-16 border-4 border-purple-100 border-t-purple-600 mx-auto mb-4"></div>
+          <p className="text-slate-600 font-medium">Chargement des activités...</p>
+        </div>
       </div>
     );
   }
@@ -105,14 +108,17 @@ const ActiviteRecruiter = () => {
   if (error) {
     return (
       <div className="mt-20 ml-8 mr-8">
-        <div className="bg-red-50 border border-red-200 rounded-lg p-8 text-center">
-          <h3 className="text-lg font-medium text-red-800 mb-2">Erreur</h3>
-          <p className="text-red-600">{error}</p>
+        <div className="bg-gradient-to-r from-red-50 to-rose-50 border border-red-200 rounded-2xl p-8 text-center shadow-sm">
+          <div className="bg-red-100 rounded-full w-16 h-16 flex items-center justify-center mx-auto mb-4">
+            <XCircle className="w-8 h-8 text-red-600" />
+          </div>
+          <h3 className="text-xl font-semibold text-red-800 mb-2">Erreur de chargement</h3>
+          <p className="text-red-600 mb-6">{error}</p>
           <button
             onClick={() => window.location.reload()}
-            className="mt-4 px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700"
+            className="bg-gradient-to-r from-red-600 to-red-700 hover:from-red-700 hover:to-red-800 text-white px-6 py-3 rounded-lg transition-all duration-200 shadow-lg hover:shadow-xl font-medium"
           >
-            Réessayer
+            🔄 Réessayer
           </button>
         </div>
       </div>
@@ -120,47 +126,87 @@ const ActiviteRecruiter = () => {
   }
 
   return (
-    <div className="mt-20 ml-8 mr-8">
-      <div className="mb-8">
-        <h1 className="text-3xl font-bold text-gray-900">Activités Récentes</h1>
-        <p className="text-gray-600 mt-2">
-          Suivez toutes vos actions sur la plateforme
-        </p>
+    <div className="mt-20 ml-8 mr-8 mb-8">
+      {/* Header avec design moderne */}
+      <div className="mb-8 bg-gradient-to-r from-purple-50 to-indigo-50 rounded-2xl p-6 shadow-sm border border-purple-200">
+        <div className="flex items-center justify-between">
+          <div>
+            <div className="flex items-center mb-2">
+              <div className="bg-purple-100 rounded-xl p-2 mr-3">
+                <Activity className="w-6 h-6 text-purple-600" />
+              </div>
+              <h1 className="text-3xl font-bold bg-gradient-to-r from-purple-700 to-indigo-700 bg-clip-text text-transparent">
+                Activités Récentes
+              </h1>
+            </div>
+            <p className="text-slate-600 font-medium">
+              Suivez toutes vos actions sur la plateforme • {activities.length} activité{activities.length !== 1 ? 's' : ''}
+            </p>
+          </div>
+          <div className="bg-white rounded-xl p-4 shadow-sm border border-purple-200">
+            <div className="text-center">
+              <div className="text-2xl font-bold text-purple-600">{activities.length}</div>
+              <div className="text-sm text-slate-500">Action{activities.length !== 1 ? 's' : ''}</div>
+            </div>
+          </div>
+        </div>
       </div>
 
       <div className="grid grid-cols-1 gap-6">
-        {/* Carte principale des activités */}
-        <div className="bg-white rounded-xl shadow-sm p-6 border border-gray-100">
+        {/* Carte principale des activités avec design amélioré */}
+        <div className="bg-gradient-to-br from-white to-slate-50 rounded-2xl shadow-sm p-8 border border-slate-200">
           <div className="space-y-6">
             {activities.length === 0 ? (
-              <div className="text-center text-gray-500 py-8">
-                <Briefcase size={48} className="mx-auto mb-4" />
-                <p className="text-lg">Aucune activité récente</p>
-                <p className="text-sm text-gray-400 mt-2">
-                  Vos actions sur la plateforme apparaîtront ici
+              <div className="text-center text-slate-500 py-12">
+                <div className="bg-slate-100 rounded-full w-20 h-20 flex items-center justify-center mx-auto mb-6">
+                  <Activity size={40} className="text-slate-400" />
+                </div>
+                <h3 className="text-xl font-semibold text-slate-800 mb-3">Aucune activité récente</h3>
+                <p className="text-slate-500 max-w-md mx-auto">
+                  Vos actions sur la plateforme apparaîtront ici. Commencez par publier une offre ou évaluer des candidatures !
                 </p>
               </div>
             ) : (
               activities.map((activity, index) => (
                 <div
                   key={index}
-                  className="flex items-start space-x-4 p-4 border rounded-lg hover:bg-gray-50 transition-colors duration-200"
+                  className="flex items-start space-x-4 p-5 bg-white rounded-xl border border-slate-200 hover:shadow-md hover:border-purple-200 transition-all duration-300 group"
                 >
+                  {/* Icône avec container coloré */}
                   <div className="flex-shrink-0 mt-1">
-                    {getActivityIcon(activity.type)}
-                  </div>
-                  <div className="flex-1">
-                    <div className="flex items-center justify-between">
-                      <h3 className="text-lg font-semibold">{activity.job_title}</h3>
-                      <span className="text-sm text-gray-500">
-                        {activity.date.toLocaleDateString()}
-                      </span>
+                    <div className={`p-2 rounded-lg ${activity.type === 'job_posted' ? 'bg-blue-100' :
+                        activity.type === 'application_accepted' ? 'bg-green-100' :
+                          activity.type === 'application_rejected' ? 'bg-red-100' :
+                            'bg-orange-100'
+                      }`}>
+                      {getActivityIcon(activity.type)}
                     </div>
-                    <p className="text-gray-600 mt-1">{activity.description}</p>
+                  </div>
+
+                  <div className="flex-1">
+                    <div className="flex items-center justify-between mb-2">
+                      <h3 className="text-lg font-bold text-slate-800 group-hover:text-purple-700 transition-colors">
+                        {activity.job_title}
+                      </h3>
+                      <div className="flex items-center text-slate-500 bg-slate-100 px-3 py-1 rounded-full">
+                        <Clock className="w-3 h-3 mr-1" />
+                        <span className="text-sm font-medium">
+                          {activity.date.toLocaleDateString()}
+                        </span>
+                      </div>
+                    </div>
+
+                    <p className="text-slate-600 mb-3 leading-relaxed">{activity.description}</p>
+
                     {activity.status && (
-                      <span className={`inline-block px-2 py-1 rounded-full text-sm mt-2 ${getStatusColor(activity.status)}`}>
-                        {activity.status}
-                      </span>
+                      <div className="flex items-center">
+                        <span className={`inline-flex items-center px-3 py-1 rounded-full text-sm font-medium ${getStatusColor(activity.status)}`}>
+                          {activity.status === 'accepted' && <CheckCircle2 className="w-3 h-3 mr-1" />}
+                          {activity.status === 'rejected' && <XCircle className="w-3 h-3 mr-1" />}
+                          {activity.status === 'pending' && <Clock className="w-3 h-3 mr-1" />}
+                          {activity.status}
+                        </span>
+                      </div>
                     )}
                   </div>
                 </div>

@@ -6,7 +6,7 @@ import {
   get_recruiter_applications,
   updatApplicationStatus
 } from '../services/api/apiApplication'
-import { CheckCircle2, XCircle, Clock, AlertCircle, RefreshCw } from 'lucide-react'
+import { CheckCircle2, XCircle, Clock, AlertCircle, RefreshCw, Eye, User, Building2, Calendar, TrendingUp } from 'lucide-react'
 
 export default function CandidatRecruteur() {
   const [applications, setApplications] = useState([])
@@ -42,7 +42,7 @@ export default function CandidatRecruteur() {
           status: app.status || "pending",
           cv_url: app.cv_url || "",
           created_at: app.created_at || new Date().toISOString(),
-          matchScore: app.matchScore || 0
+          matchScore: app.match_score || app.matchScore || 0
         };
       });
 
@@ -106,36 +106,42 @@ export default function CandidatRecruteur() {
     }
   };
 
+  const handleViewCV = (cvUrl) => {
+    if (cvUrl) {
+      window.open(cvUrl, '_blank');
+    }
+  };
+
   const getScoreColor = (score) => {
-    if (score >= 80) return 'bg-green-100 text-green-700'
-    if (score >= 60) return 'bg-blue-100 text-blue-700'
-    if (score >= 40) return 'bg-yellow-100 text-yellow-700'
-    return 'bg-gray-100 text-gray-700'
+    if (score >= 80) return 'bg-gradient-to-r from-emerald-500 to-green-500 text-white shadow-lg shadow-green-500/25'
+    if (score >= 60) return 'bg-gradient-to-r from-blue-500 to-cyan-500 text-white shadow-lg shadow-blue-500/25'
+    if (score >= 40) return 'bg-gradient-to-r from-amber-500 to-orange-500 text-white shadow-lg shadow-amber-500/25'
+    return 'bg-gradient-to-r from-gray-400 to-gray-500 text-white shadow-lg shadow-gray-500/25'
   }
 
   const getStatusConfig = (status) => {
     switch (status) {
       case 'accepted':
         return {
-          color: 'text-green-600 bg-green-50 border-green-200',
+          color: 'text-emerald-700 bg-gradient-to-r from-emerald-50 to-green-50 border-emerald-200 shadow-sm',
           icon: <CheckCircle2 className="w-4 h-4" />,
           text: 'Acceptée'
         }
       case 'rejected':
         return {
-          color: 'text-red-600 bg-red-50 border-red-200',
+          color: 'text-red-700 bg-gradient-to-r from-red-50 to-rose-50 border-red-200 shadow-sm',
           icon: <XCircle className="w-4 h-4" />,
           text: 'Refusée'
         }
       case 'pending':
         return {
-          color: 'text-yellow-600 bg-yellow-50 border-yellow-200',
+          color: 'text-amber-700 bg-gradient-to-r from-amber-50 to-yellow-50 border-amber-200 shadow-sm',
           icon: <Clock className="w-4 h-4" />,
           text: 'En attente'
         }
       default:
         return {
-          color: 'text-gray-600 bg-gray-50 border-gray-200',
+          color: 'text-gray-700 bg-gradient-to-r from-gray-50 to-slate-50 border-gray-200 shadow-sm',
           icon: <AlertCircle className="w-4 h-4" />,
           text: 'En attente'
         }
@@ -159,7 +165,13 @@ export default function CandidatRecruteur() {
   if (loading) {
     return (
       <div className="flex items-center justify-center min-h-screen pt-20 pl-30">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
+        <div className="text-center">
+          <div className="relative ml-20">
+            <div className="animate-spin rounded-full h-16 w-16 border-4 border-blue-200"></div>
+            <div className="animate-spin rounded-full h-16 w-16 border-4 border-blue-600 border-t-transparent absolute top-0"></div>
+          </div>
+          <p className="mt-4 text-gray-600 font-medium">Chargement des candidatures...</p>
+        </div>
       </div>
     )
   }
@@ -167,143 +179,238 @@ export default function CandidatRecruteur() {
   if (error) {
     return (
       <div className="flex items-center justify-center min-h-screen pt-20 pl-20">
-        <div className="bg-red-50 border border-red-200 rounded-lg p-6 max-w-md text-center">
-          <AlertCircle className="w-12 h-12 text-red-600 mx-auto mb-4" />
-          <h3 className="text-lg font-semibold text-red-800 mb-2">Erreur</h3>
-          <p className="text-red-600">{error}</p>
+        <div className="bg-gradient-to-br from-red-50 via-rose-50 to-pink-50 border-2 border-red-200 rounded-xl p-8 max-w-md text-center shadow-xl">
+          <div className="bg-red-100 rounded-full w-16 h-16 flex items-center justify-center mx-auto mb-4">
+            <AlertCircle className="w-8 h-8 text-red-600" />
+          </div>
+          <h3 className="text-xl font-bold text-red-800 mb-2">Oops ! Une erreur est survenue</h3>
+          <p className="text-red-600 mb-4">{error}</p>
+          <button
+            onClick={handleRefresh}
+            className="bg-red-600 hover:bg-red-700 text-white px-6 py-2 rounded-lg font-medium transition-colors duration-200"
+          >
+            Réessayer
+          </button>
         </div>
       </div>
     )
   }
 
+  const pendingApplications = applications.filter(candidature => candidature.status === 'pending');
+  const processedApplications = applications.filter(candidature => candidature.status !== 'pending');
+
   return (
-    <div className="ml-8 mt-20 mr-8">
-      <div className="mb-6">
-        <h1 className="text-2xl font-semibold text-gray-800">Candidatures reçues</h1>
+    <div className="ml-8 mt-20 mr-8 mb-8">
+      {/* Header avec statistiques */}
+      <div className="mb-8">
+        <div className="flex justify-between items-center mb-6">
+          <div>
+            <h1 className="text-3xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
+              Candidatures reçues
+            </h1>
+            <p className="text-gray-600 mt-1">Gérez vos candidatures en temps réel</p>
+          </div>
+          <button
+            onClick={handleRefresh}
+            className="flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg font-medium transition-all duration-200 shadow-lg hover:shadow-xl"
+          >
+            <RefreshCw className="w-4 h-4" />
+            Actualiser
+          </button>
+        </div>
+
+        {/* Statistiques */}
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
+          <div className="bg-gradient-to-r from-blue-500 to-blue-600 rounded-xl p-6 text-white shadow-lg">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-blue-100 text-sm font-medium">Total candidatures</p>
+                <p className="text-2xl font-bold">{applications.length}</p>
+              </div>
+              <div className="bg-blue-400 bg-opacity-30 p-3 rounded-lg">
+                <User className="w-6 h-6" />
+              </div>
+            </div>
+          </div>
+          <div className="bg-gradient-to-r from-amber-500 to-orange-500 rounded-xl p-6 text-white shadow-lg">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-amber-100 text-sm font-medium">En attente</p>
+                <p className="text-2xl font-bold">{pendingApplications.length}</p>
+              </div>
+              <div className="bg-amber-400 bg-opacity-30 p-3 rounded-lg">
+                <Clock className="w-6 h-6" />
+              </div>
+            </div>
+          </div>
+          <div className="bg-gradient-to-r from-emerald-500 to-green-500 rounded-xl p-6 text-white shadow-lg">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-emerald-100 text-sm font-medium">Traitées</p>
+                <p className="text-2xl font-bold">{processedApplications.length}</p>
+              </div>
+              <div className="bg-emerald-400 bg-opacity-30 p-3 rounded-lg">
+                <CheckCircle2 className="w-6 h-6" />
+              </div>
+            </div>
+          </div>
+        </div>
       </div>
 
       {applications.length === 0 ? (
-        <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-8 text-center">
+        <div className="bg-gradient-to-br from-gray-50 via-blue-50 to-indigo-50 rounded-2xl shadow-xl border border-gray-200 p-12 text-center">
           <div className="max-w-md mx-auto">
-            <AlertCircle className="w-12 h-12 text-gray-400 mx-auto mb-4" />
-            <h3 className="text-lg font-medium text-gray-900 mb-2">Aucune candidature</h3>
-            <p className="text-gray-500">
-              Vous n'avez pas encore reçu de candidatures pour vos offres.
+            <div className="bg-blue-100 rounded-full w-20 h-20 flex items-center justify-center mx-auto mb-6">
+              <AlertCircle className="w-10 h-10 text-blue-600" />
+            </div>
+            <h3 className="text-2xl font-bold text-gray-900 mb-3">Aucune candidature pour le moment</h3>
+            <p className="text-gray-600 text-lg">
+              Vos futures candidatures apparaîtront ici. Restez patient, les talents arrivent !
             </p>
           </div>
         </div>
       ) : (
-        <div className="grid gap-6">
+        <div className="space-y-8">
           {/* Section des candidatures en attente */}
-          <div className="mb-8">
-            <div className="grid gap-6">
-              {applications
-                .filter(candidature => candidature.status === 'pending')
-                .map((candidature) => (
-                  <div key={candidature.id} className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
-                    <div className="flex justify-between items-start">
-                      <div>
-                        <h3 className="text-lg font-semibold">{candidature.job_title}</h3>
+          {pendingApplications.length > 0 && (
+            <div className="space-y-6">
+              <div className="flex items-center gap-3">
+                <div className="bg-amber-500 rounded-full w-3 h-3"></div>
+                <h2 className="text-2xl font-bold text-gray-800">Candidatures en attente</h2>
+                <span className="bg-amber-100 text-amber-800 px-3 py-1 rounded-full text-sm font-semibold">
+                  {pendingApplications.length}
+                </span>
+              </div>
 
-                        {/* Section Candidat - clairement identifiée */}
-                        <div className="mt-2">
-                          <p className="font-medium text-gray-700">Candidat:</p>
-                          <p className="text-gray-600">{candidature.candidate_name}</p>
-                        </div>
+              <div className="grid gap-6">
+                {pendingApplications.map((candidature) => (
+                  <div key={candidature.id} className="bg-white rounded-2xl shadow-lg border border-gray-100 overflow-hidden hover:shadow-xl transition-all duration-300 hover:-translate-y-1">
+                    <div className="bg-gradient-to-r from-blue-500 to-purple-600 h-2"></div>
+                    <div className="p-8">
+                      <div className="flex justify-between items-start">
+                        <div className="flex-1">
+                          <div className="flex items-center gap-3 mb-4">
+                            <h3 className="text-xl font-bold text-gray-900">{candidature.job_title}</h3>
+                            <span className={`px-4 py-2 rounded-full text-sm font-bold flex items-center gap-2 ${getScoreColor(candidature.matchScore)}`}>
+                              <TrendingUp className="w-4 h-4" />
+                              {candidature.matchScore}%
+                            </span>
+                          </div>
 
-                        {/* Section Job - clairement identifiée */}
-                        <div className="mt-2">
-                          <p className="font-medium text-gray-700">Offre:</p>
-                          <p className="text-gray-600">{candidature.job_title} - {candidature.company}</p>
-                        </div>
-
-                        <p className="text-sm text-gray-500 mt-2">
-                          Postulé le {formatDate(candidature.created_at)}
-                        </p>
-
-                        <div className="mt-4">
-                          <span className={`px-3 py-1 rounded-full text-sm font-medium ${getScoreColor(candidature.matchScore)}`}>
-                            Score: {candidature.matchScore}%
-                          </span>
-                        </div>
-                      </div>
-
-                      <div className="flex gap-2">
-                        <button
-                          onClick={() => handleStatusUpdate(candidature.id, 'accepted')}
-                          className="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600"
-                        >
-                          Accepter
-                        </button>
-                        <button
-                          onClick={() => handleStatusUpdate(candidature.id, 'rejected')}
-                          className="bg-gray-400 text-white px-4 py-2 rounded hover:bg-gray-500"
-                        >
-                          Refuser
-                        </button>
-                        <button
-                          onClick={() => handleViewCV(candidature.cv_url)}
-                          className="text-blue-700 px-4 py-2 rounded underline"
-                        >
-                          Voir CV
-                        </button>
-                      </div>
-                    </div>
-                  </div>
-                ))}
-            </div>
-          </div>
-
-          {/* Section des candidatures traitées */}
-          <div>
-            <h2 className="text-xl font-semibold text-gray-800 mb-4">Candidatures traitées</h2>
-            <div className="grid gap-6">
-              {applications
-                .filter(candidature => candidature.status !== 'pending')
-                .map((candidature) => {
-                  const statusConfig = getStatusConfig(candidature.status);
-                  return (
-                    <div key={candidature.id} className="bg-white rounded-lg border p-6">
-                      <div className="flex justify-between">
-                        <div>
-                          <h3 className="text-lg font-semibold">{candidature.job_title}</h3>
-
-                          <div className="grid grid-cols-2 gap-4 mt-3">
-                            <div>
-                              <p className="font-medium text-sm text-gray-500">Candidat</p>
-                              <p>{candidature.candidate_name}</p>
+                          <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+                            <div className="flex items-center gap-3 bg-gray-50 rounded-lg p-4">
+                              <div className="bg-blue-100 rounded-lg p-2">
+                                <User className="w-5 h-5 text-blue-600" />
+                              </div>
+                              <div>
+                                <p className="text-sm font-medium text-gray-500">Candidat</p>
+                                <p className="font-semibold text-gray-900">{candidature.candidate_name}</p>
+                              </div>
                             </div>
-                            <div>
-                              <p className="font-medium text-sm text-gray-500">Entreprise</p>
-                              <p>{candidature.company}</p>
+
+                            <div className="flex items-center gap-3 bg-gray-50 rounded-lg p-4">
+                              <div className="bg-purple-100 rounded-lg p-2">
+                                <Building2 className="w-5 h-5 text-purple-600" />
+                              </div>
+                              <div>
+                                <p className="text-sm font-medium text-gray-500">Entreprise</p>
+                                <p className="font-semibold text-gray-900">{candidature.company}</p>
+                              </div>
                             </div>
                           </div>
 
-                          <div className="mt-4 flex gap-4">
-                            <span className={`inline-flex items-center px-3 py-1 rounded-full text-sm ${statusConfig.color}`}>
-                              {statusConfig.icon}
-                              <span className="ml-1.5">{statusConfig.text}</span>
-                            </span>
-                            <span className={`px-3 py-1 rounded-full text-sm ${getScoreColor(candidature.matchScore)}`}>
-                              Score: {candidature.matchScore}%
-                            </span>
+                          <div className="flex items-center gap-2 text-gray-500">
+                            <Calendar className="w-4 h-4" />
+                            <span className="text-sm">Postulé le {formatDate(candidature.created_at)}</span>
                           </div>
                         </div>
 
-                        <div className="flex items-center">
+                        <div className="flex flex-col gap-3 ml-6">
                           <button
-                            onClick={() => window.open(candidature.cv_url, '_blank')}
-                            className="text-blue-600 hover:text-blue-800"
+                            onClick={() => handleStatusUpdate(candidature.id, 'accepted')}
+                            className="bg-gradient-to-r from-emerald-500 to-green-500 hover:from-emerald-600 hover:to-green-600 text-white px-6 py-3 rounded-xl font-semibold transition-all duration-200 shadow-lg hover:shadow-xl flex items-center gap-2"
                           >
+                            <CheckCircle2 className="w-4 h-4" />
+                            Accepter
+                          </button>
+                          <button
+                            onClick={() => handleStatusUpdate(candidature.id, 'rejected')}
+                            className="bg-gradient-to-r from-gray-400 to-gray-500 hover:from-gray-500 hover:to-gray-600 text-white px-6 py-3 rounded-xl font-semibold transition-all duration-200 shadow-lg hover:shadow-xl flex items-center gap-2"
+                          >
+                            <XCircle className="w-4 h-4" />
+                            Refuser
+                          </button>
+                          <button
+                            onClick={() => handleViewCV(candidature.cv_url)}
+                            className="bg-gradient-to-r from-blue-500 to-indigo-500 hover:from-blue-600 hover:to-indigo-600 text-white px-6 py-3 rounded-xl font-semibold transition-all duration-200 shadow-lg hover:shadow-xl flex items-center gap-2"
+                          >
+                            <Eye className="w-4 h-4" />
                             Voir CV
                           </button>
                         </div>
                       </div>
                     </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {/* Section des candidatures traitées */}
+          {processedApplications.length > 0 && (
+            <div className="space-y-6">
+              <div className="flex items-center gap-3">
+                <div className="bg-green-500 rounded-full w-3 h-3"></div>
+                <h2 className="text-2xl font-bold text-gray-800">Candidatures traitées</h2>
+                <span className="bg-green-100 text-green-800 px-3 py-1 rounded-full text-sm font-semibold">
+                  {processedApplications.length}
+                </span>
+              </div>
+
+              <div className="grid gap-4">
+                {processedApplications.map((candidature) => {
+                  const statusConfig = getStatusConfig(candidature.status);
+                  return (
+                    <div key={candidature.id} className="bg-white rounded-xl shadow-md border border-gray-100 p-6 hover:shadow-lg transition-all duration-200">
+                      <div className="flex justify-between items-center">
+                        <div className="flex-1">
+                          <div className="flex items-center gap-3 mb-3">
+                            <h3 className="text-lg font-bold text-gray-900">{candidature.job_title}</h3>
+                            <span className={`inline-flex items-center px-3 py-1 rounded-full text-sm font-medium border ${statusConfig.color}`}>
+                              {statusConfig.icon}
+                              <span className="ml-2">{statusConfig.text}</span>
+                            </span>
+                            <span className={`px-3 py-1 rounded-full text-xs font-bold ${getScoreColor(candidature.matchScore)}`}>
+                              {candidature.matchScore}%
+                            </span>
+                          </div>
+
+                          <div className="grid grid-cols-2 gap-6">
+                            <div>
+                              <p className="text-xs text-gray-500 font-medium uppercase tracking-wider">Candidat</p>
+                              <p className="font-semibold text-gray-900">{candidature.candidate_name}</p>
+                            </div>
+                            <div>
+                              <p className="text-xs text-gray-500 font-medium uppercase tracking-wider">Entreprise</p>
+                              <p className="font-semibold text-gray-900">{candidature.company}</p>
+                            </div>
+                          </div>
+                        </div>
+
+                        <button
+                          onClick={() => handleViewCV(candidature.cv_url)}
+                          className="bg-blue-50 hover:bg-blue-100 text-blue-600 hover:text-blue-700 px-4 py-2 rounded-lg font-medium transition-all duration-200 flex items-center gap-2"
+                        >
+                          <Eye className="w-4 h-4" />
+                          Voir CV
+                        </button>
+                      </div>
+                    </div>
                   );
                 })}
+              </div>
             </div>
-          </div>
+          )}
         </div>
       )}
     </div>

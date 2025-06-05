@@ -52,7 +52,8 @@ def apply_to_job():
             },
             'cv_url': data['cv_url'],
             'created_at': datetime.utcnow().isoformat(),
-            'status': 'pending'
+            'status': 'pending',
+            'match_score': data.get('match_score', 0)
         }
         
         db.collection('applications').document(application['id']).set(application)

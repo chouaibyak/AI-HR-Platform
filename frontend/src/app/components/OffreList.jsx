@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react';
 import apiJob from '../services/api/apiJob';
 import apiApplication from '../services/api/apiApplication';
 import { auth } from '../firebase';
+import { MapPin, Building2, Briefcase, TrendingUp, CheckCircle, Send, Star, Clock } from 'lucide-react';
 
 export default function OffreList() {
   const [jobs, setJobs] = useState([]);
@@ -68,12 +69,20 @@ export default function OffreList() {
     }
 
     try {
+      // Récupérer le score de matching pour ce job
+      const cvId = storedCV.split("_")[0];
+      const scoreRes = await fetch(`http://localhost:5004/match/${cvId}/${jobId}`);
+      const matchData = await scoreRes.json();
+
+      const matchScore = scoreRes.ok ? matchData.match_score : 0;
+
       await apiApplication.post('/applications', {
         job_id: jobId,
         job_title: jobTitle,
         candidate_id: currentUser.uid,
         candidate_name: currentUser.displayName || 'Anonyme',
-        cv_url: storedCV
+        cv_url: storedCV,
+        match_score: matchScore
       });
       alert('Candidature envoyée!');
     } catch (error) {
@@ -82,34 +91,109 @@ export default function OffreList() {
     }
   };
 
+  const getScoreColor = (score) => {
+    if (score >= 80) return 'from-emerald-500 to-green-500';
+    if (score >= 60) return 'from-blue-500 to-cyan-500';
+    if (score >= 40) return 'from-amber-500 to-orange-500';
+    return 'from-gray-400 to-gray-500';
+  };
+
+  const getScoreBadge = (score) => {
+    if (score >= 80) return 'Excellent match';
+    if (score >= 60) return 'Bon match';
+    if (score >= 40) return 'Match modéré';
+    return 'Match faible';
+  };
+
   if (loading) {
     return (
-      <div className="flex justify-center items-center min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100">
-        <div className="text-center bg-white p-8 rounded-2xl shadow-xl">
-          <div className="relative">
-            <div className="animate-spin rounded-full h-16 w-16 border-4 border-blue-200 border-t-blue-600 mx-auto"></div>
-            <div className="absolute inset-0 rounded-full bg-blue-50 opacity-20 animate-pulse"></div>
+      <div className="flex items-center justify-center min-h-screen pt-20 pl-30">
+        <div className="text-center">
+          <div className="relative ml-20">
+            <div className="animate-spin rounded-full h-16 w-16 border-4 border-blue-200"></div>
+            <div className="animate-spin rounded-full h-16 w-16 border-4 border-blue-600 border-t-transparent absolute top-0"></div>
           </div>
-          <p className="mt-6 text-xl font-medium text-gray-700">Chargement des offres...</p>
-          <p className="mt-2 text-sm text-gray-500">Veuillez patienter</p>
+          <p className="mt-4 text-gray-600 font-medium">Chargement des candidatures...</p>
         </div>
       </div>
-    );
+    )
   }
 
   return (
-    <div className="bg-gray-50 min-h-screen">
-      <div className="max-w-6xl mx-auto p-6 pt-24">
-        <h2 className="text-3xl font-bold text-gray-800 mb-6">Offres disponibles</h2>
+    <div className="min-h-screen bg-gradient-to-br from-gray-50 via-blue-50/30 to-indigo-50/30">
+      <div className="max-w-7xl mx-auto p-6 pt-24">
+        {/* Header Section */}
+        <div className="text-center mb-12">
+          <h1 className="text-4xl md:text-5xl font-bold bg-gradient-to-r from-blue-600 via-purple-600 to-indigo-600 bg-clip-text text-transparent mb-4">
+            Découvrez Votre Prochaine Opportunité
+          </h1>
+          <p className="text-xl text-gray-600 max-w-2xl mx-auto">
+            Explorez des offres d'emploi personnalisées avec des scores de compatibilité basés sur votre profil
+          </p>
+        </div>
 
+        {/* CV Status Card */}
         {localStorage.getItem("last_uploaded_cv") && (
-          <div className="bg-green-50 border border-green-200 rounded-lg p-4 mb-6">
-            <p className="text-green-700 font-medium">
-              ✓ CV déjà enregistré : {localStorage.getItem("last_uploaded_cv")}
-            </p>
+          <div className="bg-gradient-to-r from-emerald-500 to-green-500 rounded-2xl p-6 mb-8 shadow-xl border border-emerald-200">
+            <div className="flex items-center gap-4">
+              <div className="bg-white/20 rounded-full p-3">
+                <CheckCircle className="w-6 h-6 text-white" />
+              </div>
+              <div className="flex-1">
+                <h3 className="text-white font-semibold text-lg">CV Enregistré avec Succès</h3>
+                <p className="text-emerald-100">
+                  {localStorage.getItem("last_uploaded_cv")}
+                </p>
+              </div>
+              <div className="bg-white/20 rounded-lg px-4 py-2">
+                <span className="text-white font-medium">Prêt à postuler</span>
+              </div>
+            </div>
           </div>
         )}
 
+        {/* Stats Section */}
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+          <div className="bg-white rounded-xl p-6 shadow-lg border border-gray-100">
+            <div className="flex items-center gap-4">
+              <div className="bg-blue-100 rounded-lg p-3">
+                <Briefcase className="w-6 h-6 text-blue-600" />
+              </div>
+              <div>
+                <p className="text-2xl font-bold text-gray-900">{jobs.length}</p>
+                <p className="text-gray-600">Offres disponibles</p>
+              </div>
+            </div>
+          </div>
+          <div className="bg-white rounded-xl p-6 shadow-lg border border-gray-100">
+            <div className="flex items-center gap-4">
+              <div className="bg-green-100 rounded-lg p-3">
+                <TrendingUp className="w-6 h-6 text-green-600" />
+              </div>
+              <div>
+                <p className="text-2xl font-bold text-gray-900">
+                  {Object.values(matchScores).filter(score => score >= 60).length}
+                </p>
+                <p className="text-gray-600">Bons matchs</p>
+              </div>
+            </div>
+          </div>
+          <div className="bg-white rounded-xl p-6 shadow-lg border border-gray-100">
+            <div className="flex items-center gap-4">
+              <div className="bg-purple-100 rounded-lg p-3">
+                <Star className="w-6 h-6 text-purple-600" />
+              </div>
+              <div>
+                <p className="text-2xl font-bold text-gray-900">
+                  {Object.values(matchScores).filter(score => score >= 80).length}
+                </p>
+                <p className="text-gray-600">Matchs excellents</p>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* Jobs List */}
         <div className="space-y-6">
           {jobs
             .sort((a, b) => {
@@ -117,49 +201,121 @@ export default function OffreList() {
               const scoreB = matchScores[b.id] ?? -1;
               return scoreB - scoreA;
             })
-            .map(job => (
-              <div key={job.id} className="bg-white border border-gray-200 rounded-xl shadow-sm hover:shadow-md transition-shadow duration-200">
-                <div className="p-6">
-                  <div className="flex flex-col lg:flex-row lg:items-start lg:justify-between">
-                    <div className="flex-1">
-                      <div className="flex items-start justify-between mb-3">
-                        <h3 className="text-xl font-bold text-blue-700">{job.title}</h3>
+            .map(job => {
+              const score = matchScores[job.id];
+              const hasScore = score !== undefined && score !== null;
 
-                      </div>
+              return (
+                <div key={job.id} className="bg-white rounded-2xl shadow-lg border border-gray-100 overflow-hidden hover:shadow-xl transition-all duration-300 hover:-translate-y-1">
+                  {/* Top gradient bar based on score */}
+                  {hasScore && (
+                    <div className={`h-1 bg-gradient-to-r ${getScoreColor(score)}`}></div>
+                  )}
 
-                      <div className="flex items-center text-gray-600 mb-3">
-                        <span className="font-medium">{job.company}</span>
-                        <span className="mx-2">•</span>
-                        <span>{job.location}</span>
-                      </div>
+                  <div className="p-8">
+                    <div className="flex flex-col lg:flex-row lg:items-start lg:justify-between gap-6">
+                      <div className="flex-1">
+                        <div className="flex items-start justify-between mb-4">
+                          <div className="flex-1">
+                            <h3 className="text-2xl font-bold text-gray-900 mb-2 hover:text-blue-600 transition-colors">
+                              {job.title}
+                            </h3>
 
-                      <p className="text-gray-700 leading-relaxed mb-4">{job.description}</p>
-                    </div>
+                            <div className="flex flex-wrap items-center gap-4 text-gray-600 mb-4">
+                              <div className="flex items-center gap-2">
+                                <Building2 className="w-4 h-4 text-gray-400" />
+                                <span className="font-medium">{job.company}</span>
+                              </div>
+                              <div className="flex items-center gap-2">
+                                <MapPin className="w-4 h-4 text-gray-400" />
+                                <span>{job.location}</span>
+                              </div>
+                              <div className="flex items-center gap-2">
+                                <Clock className="w-4 h-4 text-gray-400" />
+                                <span>Publié récemment</span>
+                              </div>
+                            </div>
+                          </div>
 
-                    <div className="lg:ml-6 lg:flex-shrink-0">
-                      {matchScores[job.id] !== undefined && (
-                        <div className="text-center mb-4">
-                          <p className={`text-2xl font-bold ${matchScores[job.id] >= 70 ? 'text-green-600' :
-                            matchScores[job.id] >= 40 ? 'text-yellow-600' : 'text-red-600'
-                            }`}>
-                            {matchScores[job.id] ?? 'N/A'}%
-                          </p>
-                          <p className="text-sm text-gray-500">Compatibilité</p>
+                          {/* Score badge in top right */}
+                          {hasScore && (
+                            <div className="text-center">
+                              <div className={`inline-flex items-center justify-center w-16 h-16 rounded-full bg-gradient-to-r ${getScoreColor(score)} text-white font-bold text-lg shadow-lg`}>
+                                {score}%
+                              </div>
+                              <p className="text-xs text-gray-500 mt-2 font-medium">
+                                {getScoreBadge(score)}
+                              </p>
+                            </div>
+                          )}
                         </div>
-                      )}
 
-                      <button
-                        onClick={() => handleApply(job.id, job.title)}
-                        className="w-full lg:w-auto bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-lg font-medium transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
-                      >
-                        Postuler
-                      </button>
+                        <div className="bg-gray-50 rounded-xl p-4 mb-6">
+                          <p className="text-gray-700 leading-relaxed">{job.description}</p>
+                        </div>
+
+                        {/* Tags or additional info could go here */}
+                        <div className="flex items-center gap-2 mb-4">
+                          <span className="bg-blue-100 text-blue-800 px-3 py-1 rounded-full text-sm font-medium">
+                            Emploi
+                          </span>
+                          {hasScore && score >= 70 && (
+                            <span className="bg-green-100 text-green-800 px-3 py-1 rounded-full text-sm font-medium flex items-center gap-1">
+                              <Star className="w-3 h-3" />
+                              Recommandé
+                            </span>
+                          )}
+                        </div>
+                      </div>
+
+                      <div className="lg:flex-shrink-0 lg:w-48">
+                        {hasScore && (
+                          <div className="bg-gradient-to-br from-gray-50 to-gray-100 rounded-xl p-4 mb-4 text-center">
+                            <div className="flex items-center justify-center gap-2 mb-2">
+                              <TrendingUp className="w-4 h-4 text-gray-600" />
+                              <span className="text-sm font-medium text-gray-600">Score de compatibilité</span>
+                            </div>
+                            <div className={`text-3xl font-bold bg-gradient-to-r ${getScoreColor(score)} bg-clip-text text-transparent`}>
+                              {score}%
+                            </div>
+                            <div className="w-full bg-gray-200 rounded-full h-2 mt-2">
+                              <div
+                                className={`h-2 rounded-full bg-gradient-to-r ${getScoreColor(score)}`}
+                                style={{ width: `${score}%` }}
+                              ></div>
+                            </div>
+                          </div>
+                        )}
+
+                        <button
+                          onClick={() => handleApply(job.id, job.title)}
+                          className="w-full bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white px-6 py-4 rounded-xl font-semibold transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 shadow-lg hover:shadow-xl flex items-center justify-center gap-2"
+                        >
+                          <Send className="w-4 h-4" />
+                          Postuler Maintenant
+                        </button>
+                      </div>
                     </div>
                   </div>
                 </div>
-              </div>
-            ))}
+              );
+            })}
         </div>
+
+        {/* Empty state if no jobs */}
+        {jobs.length === 0 && (
+          <div className="text-center py-16">
+            <div className="bg-white rounded-2xl shadow-lg p-12 max-w-md mx-auto">
+              <div className="bg-gray-100 rounded-full w-16 h-16 flex items-center justify-center mx-auto mb-4">
+                <Briefcase className="w-8 h-8 text-gray-400" />
+              </div>
+              <h3 className="text-xl font-semibold text-gray-900 mb-2">Aucune offre disponible</h3>
+              <p className="text-gray-600">
+                Revenez plus tard pour découvrir de nouvelles opportunités !
+              </p>
+            </div>
+          </div>
+        )}
       </div>
     </div>
   );

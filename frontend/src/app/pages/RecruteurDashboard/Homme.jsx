@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Briefcase, Users, BarChart2, Clock, CheckCircle, AlertCircle, FileText } from 'lucide-react';
+import { Briefcase, Users, BarChart2, Clock, CheckCircle, AlertCircle, FileText, TrendingUp, Star, Target } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { auth, db } from '@/app/firebase';
 import { collection, query, where, onSnapshot, getDocs } from 'firebase/firestore';
@@ -11,7 +11,7 @@ export default function Homme({ onNavigate }) {
   const [userinfo, setUserInfo] = useState(null);
   const [stats, setStats] = useState({
     totalApplications: 0,
-    totalJobs: 0, // Changé de activeJobs à totalJobs
+    totalJobs: 0,
     pendingApplications: 0,
     acceptedApplications: 0
   });
@@ -57,14 +57,14 @@ export default function Homme({ onNavigate }) {
 
       console.log("Statistiques calculées:", {
         totalApplications,
-        totalJobs, // Changé de activeJobs à totalJobs
+        totalJobs,
         pendingApplications,
         acceptedApplications
       });
 
       setStats({
         totalApplications,
-        totalJobs, // Changé de activeJobs à totalJobs
+        totalJobs,
         pendingApplications,
         acceptedApplications
       });
@@ -88,7 +88,7 @@ export default function Homme({ onNavigate }) {
         setLoading(false);
         setStats({
           totalApplications: 0,
-          totalJobs: 0, // Changé de activeJobs à totalJobs
+          totalJobs: 0,
           pendingApplications: 0,
           acceptedApplications: 0
         });
@@ -113,22 +113,27 @@ export default function Homme({ onNavigate }) {
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center min-h-screen pt-20">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
+      <div className="flex items-center justify-center min-h-screen pt-20 bg-gradient-to-br from-blue-50 via-white to-purple-50">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-16 w-16 border-4 border-blue-200 border-t-blue-600 mx-auto mb-4"></div>
+          <p className="text-gray-600 font-medium">Chargement de votre tableau de bord...</p>
+        </div>
       </div>
     );
   }
 
   if (error) {
     return (
-      <div className="flex items-center justify-center min-h-screen pt-20">
-        <div className="bg-red-50 border border-red-200 rounded-lg p-6 max-w-md text-center">
-          <AlertCircle className="w-12 h-12 text-red-600 mx-auto mb-4" />
-          <h3 className="text-lg font-semibold text-red-800 mb-2">Erreur</h3>
-          <p className="text-red-600">{error}</p>
+      <div className="flex items-center justify-center min-h-screen pt-20 bg-gradient-to-br from-red-50 via-white to-pink-50">
+        <div className="bg-white border border-red-100 rounded-2xl p-8 max-w-md text-center shadow-xl">
+          <div className="w-16 h-16 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-6">
+            <AlertCircle className="w-8 h-8 text-red-600" />
+          </div>
+          <h3 className="text-xl font-bold text-red-800 mb-3">Oops ! Une erreur s'est produite</h3>
+          <p className="text-red-600 mb-6 leading-relaxed">{error}</p>
           <button
             onClick={fetchData}
-            className="mt-4 bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition duration-300"
+            className="bg-gradient-to-r from-blue-600 to-blue-700 text-white px-8 py-3 rounded-xl hover:from-blue-700 hover:to-blue-800 transition-all duration-300 font-semibold shadow-lg hover:shadow-xl transform hover:-translate-y-0.5"
           >
             Réessayer
           </button>
@@ -137,120 +142,206 @@ export default function Homme({ onNavigate }) {
     );
   }
 
+  // Calcul du taux d'acceptation
+  const acceptanceRate = stats.totalApplications > 0
+    ? Math.round((stats.acceptedApplications / stats.totalApplications) * 100)
+    : 0;
+
+  // Déterminer le message d'accueil selon l'heure
+  const getGreeting = () => {
+    const hour = new Date().getHours();
+    if (hour < 12) return 'Bonjour';
+    if (hour < 17) return 'Bon après-midi';
+    return 'Bonsoir';
+  };
+
   return (
-    <div className='flex flex-col h-full p-6 bg-gray-50 mt-20'>
-      {/* En-tête avec salutation */}
-      <div className='mb-8'>
-        <h1 className='text-3xl font-bold text-gray-900'>
-          Bonjour, {userinfo?.name || 'Recruteur'}
-        </h1>
-        <p className='text-gray-600 mt-2'>
-          Bienvenue sur votre tableau de bord. Gérez vos offres et suivez vos candidatures.
-        </p>
-      </div>
-
-      {/* Statistiques principales */}
-      <div className='grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8'>
-        {/* Total des candidatures */}
-        <div className='bg-white rounded-xl shadow-sm p-6 border border-gray-100 hover:shadow-md transition-shadow duration-300'>
-          <div className='flex items-center justify-between'>
+    <div className='flex flex-col min-h-screen bg-gradient-to-br from-slate-50 via-blue-50/30 to-indigo-50/50 mt-20'>
+      <div className="max-w-7xl mx-auto w-full p-6 space-y-8">
+        {/* En-tête avec salutation améliorée */}
+        <div className='bg-white rounded-3xl shadow-sm p-8 border border-gray-100/50 backdrop-blur-sm'>
+          <div className="flex items-center justify-between">
             <div>
-              <p className='text-sm text-gray-500 mb-1'>Total des candidatures</p>
-              <h3 className='text-2xl font-bold text-gray-900'>{stats.totalApplications}</h3>
+              <h1 className='text-4xl font-bold bg-gradient-to-r from-gray-900 via-blue-800 to-indigo-700 bg-clip-text text-transparent'>
+                {getGreeting()}, {userinfo?.name || 'Recruteur'} 👋
+              </h1>
+              <p className='text-gray-600 mt-3 text-lg'>
+                Bienvenue sur votre tableau de bord. Gérez vos offres et suivez vos candidatures.
+              </p>
             </div>
-            <div className='bg-blue-50 p-3 rounded-lg'>
-              <Users className='w-6 h-6 text-blue-600' />
+            <div className="hidden lg:block">
+              <div className="w-20 h-20 bg-gradient-to-br from-blue-500 to-purple-600 rounded-2xl flex items-center justify-center shadow-lg">
+                <BarChart2 className="w-10 h-10 text-white" />
+              </div>
             </div>
           </div>
         </div>
 
-        {/* Total des offres */}
-        <div className='bg-white rounded-xl shadow-sm p-6 border border-gray-100 hover:shadow-md transition-shadow duration-300'>
-          <div className='flex items-center justify-between'>
-            <div>
-              <p className='text-sm text-gray-500 mb-1'>Total des offres</p> {/* Changé de "Offres actives" */}
-              <h3 className='text-2xl font-bold text-gray-900'>{stats.totalJobs}</h3> {/* Changé de activeJobs à totalJobs */}
+        {/* Statistiques principales avec design moderne */}
+        <div className='grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6'>
+          {/* Total des candidatures */}
+          <div className='group bg-white rounded-2xl shadow-sm p-6 border border-gray-100/50 hover:shadow-xl hover:border-blue-200/50 transition-all duration-300 transform hover:-translate-y-1'>
+            <div className='flex items-center justify-between mb-4'>
+              <div className='bg-gradient-to-br from-blue-500 to-blue-600 p-3 rounded-xl shadow-lg group-hover:shadow-blue-200 transition-shadow duration-300'>
+                <Users className='w-6 h-6 text-white' />
+              </div>
+              <div className="text-right">
+                <div className="flex items-center text-green-600 text-sm font-medium">
+                  <TrendingUp className="w-4 h-4 mr-1" />
+                  +12%
+                </div>
+              </div>
             </div>
-            <div className='bg-green-50 p-3 rounded-lg'>
-              <Briefcase className='w-6 h-6 text-green-600' />
+            <div>
+              <p className='text-sm text-gray-500 mb-2 font-medium'>Total des candidatures</p>
+              <h3 className='text-3xl font-bold text-gray-900 group-hover:text-blue-600 transition-colors duration-300'>
+                {stats.totalApplications}
+              </h3>
+            </div>
+          </div>
+
+          {/* Total des offres */}
+          <div className='group bg-white rounded-2xl shadow-sm p-6 border border-gray-100/50 hover:shadow-xl hover:border-green-200/50 transition-all duration-300 transform hover:-translate-y-1'>
+            <div className='flex items-center justify-between mb-4'>
+              <div className='bg-gradient-to-br from-green-500 to-emerald-600 p-3 rounded-xl shadow-lg group-hover:shadow-green-200 transition-shadow duration-300'>
+                <Briefcase className='w-6 h-6 text-white' />
+              </div>
+              <div className="text-right">
+                <div className="flex items-center text-green-600 text-sm font-medium">
+                  <Star className="w-4 h-4 mr-1" />
+                  Actif
+                </div>
+              </div>
+            </div>
+            <div>
+              <p className='text-sm text-gray-500 mb-2 font-medium'>Total des offres</p>
+              <h3 className='text-3xl font-bold text-gray-900 group-hover:text-green-600 transition-colors duration-300'>
+                {stats.totalJobs}
+              </h3>
+            </div>
+          </div>
+
+          {/* Candidatures en attente */}
+          <div className='group bg-white rounded-2xl shadow-sm p-6 border border-gray-100/50 hover:shadow-xl hover:border-yellow-200/50 transition-all duration-300 transform hover:-translate-y-1'>
+            <div className='flex items-center justify-between mb-4'>
+              <div className='bg-gradient-to-br from-yellow-500 to-orange-500 p-3 rounded-xl shadow-lg group-hover:shadow-yellow-200 transition-shadow duration-300'>
+                <Clock className='w-6 h-6 text-white' />
+              </div>
+              <div className="text-right">
+                <div className="flex items-center text-orange-600 text-sm font-medium">
+                  <Target className="w-4 h-4 mr-1" />
+                  Action
+                </div>
+              </div>
+            </div>
+            <div>
+              <p className='text-sm text-gray-500 mb-2 font-medium'>En attente</p>
+              <h3 className='text-3xl font-bold text-gray-900 group-hover:text-yellow-600 transition-colors duration-300'>
+                {stats.pendingApplications}
+              </h3>
+            </div>
+          </div>
+
+          {/* Candidatures acceptées */}
+          <div className='group bg-white rounded-2xl shadow-sm p-6 border border-gray-100/50 hover:shadow-xl hover:border-purple-200/50 transition-all duration-300 transform hover:-translate-y-1'>
+            <div className='flex items-center justify-between mb-4'>
+              <div className='bg-gradient-to-br from-purple-500 to-indigo-600 p-3 rounded-xl shadow-lg group-hover:shadow-purple-200 transition-shadow duration-300'>
+                <CheckCircle className='w-6 h-6 text-white' />
+              </div>
+              <div className="text-right">
+                <div className="flex items-center text-purple-600 text-sm font-medium">
+                  {acceptanceRate}%
+                </div>
+              </div>
+            </div>
+            <div>
+              <p className='text-sm text-gray-500 mb-2 font-medium'>Acceptées</p>
+              <h3 className='text-3xl font-bold text-gray-900 group-hover:text-purple-600 transition-colors duration-300'>
+                {stats.acceptedApplications}
+              </h3>
             </div>
           </div>
         </div>
 
-        {/* Candidatures en attente */}
-        <div className='bg-white rounded-xl shadow-sm p-6 border border-gray-100 hover:shadow-md transition-shadow duration-300'>
-          <div className='flex items-center justify-between'>
-            <div>
-              <p className='text-sm text-gray-500 mb-1'>En attente</p>
-              <h3 className='text-2xl font-bold text-gray-900'>{stats.pendingApplications}</h3>
+        {/* Actions rapides avec design modernisé */}
+        <div className='grid grid-cols-1 md:grid-cols-2 gap-6'>
+          {/* Créer une nouvelle offre */}
+          <div className='group bg-white rounded-2xl shadow-sm p-8 border border-gray-100/50 hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1 relative overflow-hidden'>
+            <div className="absolute top-0 right-0 w-32 h-32 bg-gradient-to-br from-blue-100 to-purple-100 rounded-full -translate-y-16 translate-x-16 opacity-50 group-hover:opacity-100 transition-opacity duration-300"></div>
+            <div className="relative">
+              <div className="flex items-center mb-4">
+                <div className='bg-gradient-to-br from-blue-500 to-purple-600 p-3 rounded-xl shadow-lg mr-4'>
+                  <Briefcase className='w-6 h-6 text-white' />
+                </div>
+                <h3 className='text-xl font-bold text-gray-900 group-hover:text-blue-600 transition-colors duration-300'>
+                  Créer une nouvelle offre
+                </h3>
+              </div>
+              <p className='text-gray-600 mb-6 leading-relaxed'>
+                Publiez une nouvelle offre d'emploi pour attirer les meilleurs talents et développer votre équipe.
+              </p>
+              <button
+                className='bg-gradient-to-r from-blue-600 to-purple-600 text-white px-8 py-3 rounded-xl hover:from-blue-700 hover:to-purple-700 transition-all duration-300 font-semibold shadow-lg hover:shadow-xl transform hover:-translate-y-0.5 group-hover:scale-105'
+                onClick={() => onNavigate('jobs')}
+              >
+                Créer une offre
+              </button>
             </div>
-            <div className='bg-yellow-50 p-3 rounded-lg'>
-              <Clock className='w-6 h-6 text-yellow-600' />
+          </div>
+
+          {/* Voir les candidatures */}
+          <div className='group bg-white rounded-2xl shadow-sm p-8 border border-gray-100/50 hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1 relative overflow-hidden'>
+            <div className="absolute top-0 right-0 w-32 h-32 bg-gradient-to-br from-green-100 to-blue-100 rounded-full -translate-y-16 translate-x-16 opacity-50 group-hover:opacity-100 transition-opacity duration-300"></div>
+            <div className="relative">
+              <div className="flex items-center mb-4">
+                <div className='bg-gradient-to-br from-green-500 to-blue-600 p-3 rounded-xl shadow-lg mr-4'>
+                  <Users className='w-6 h-6 text-white' />
+                </div>
+                <h3 className='text-xl font-bold text-gray-900 group-hover:text-green-600 transition-colors duration-300'>
+                  Gérer les candidatures
+                </h3>
+              </div>
+              <p className='text-gray-600 mb-6 leading-relaxed'>
+                Consultez et gérez les candidatures reçues pour vos offres. Trouvez le candidat parfait.
+              </p>
+              <button
+                className='bg-gradient-to-r from-gray-600 to-gray-700 text-white px-8 py-3 rounded-xl hover:from-gray-700 hover:to-gray-800 transition-all duration-300 font-semibold shadow-lg hover:shadow-xl transform hover:-translate-y-0.5 group-hover:scale-105'
+                onClick={() => onNavigate('candidates')}
+              >
+                Voir les candidatures
+              </button>
             </div>
           </div>
         </div>
 
-        {/* Candidatures acceptées */}
-        <div className='bg-white rounded-xl shadow-sm p-6 border border-gray-100 hover:shadow-md transition-shadow duration-300'>
-          <div className='flex items-center justify-between'>
-            <div>
-              <p className='text-sm text-gray-500 mb-1'>Acceptées</p>
-              <h3 className='text-2xl font-bold text-gray-900'>{stats.acceptedApplications}</h3>
+        {/* Conseils et astuces redesignés */}
+        <div className='bg-gradient-to-r from-indigo-50 via-white to-purple-50 rounded-2xl shadow-sm p-8 border border-indigo-100/50'>
+          <div className="flex items-center mb-6">
+            <div className='bg-gradient-to-br from-indigo-500 to-purple-600 p-3 rounded-xl shadow-lg mr-4'>
+              <Star className='w-6 h-6 text-white' />
             </div>
-            <div className='bg-purple-50 p-3 rounded-lg'>
-              <CheckCircle className='w-6 h-6 text-purple-600' />
-            </div>
+            <h3 className='text-xl font-bold text-gray-900'>Conseils pour optimiser vos recrutements</h3>
           </div>
-        </div>
-      </div>
 
-      {/* Actions rapides */}
-      <div className='grid grid-cols-1 md:grid-cols-2 gap-6 mb-8'>
-        {/* Créer une nouvelle offre */}
-        <div className='bg-white rounded-xl shadow-sm p-6 border border-gray-100 hover:shadow-md transition-shadow duration-300'>
-          <h3 className='text-lg font-semibold text-gray-900 mb-4'>Créer une nouvelle offre</h3>
-          <p className='text-gray-600 mb-4'>
-            Publiez une nouvelle offre d'emploi pour attirer les meilleurs talents.
-          </p>
-          <button
-            className='bg-blue-600 text-white px-6 py-2 rounded-lg hover:bg-blue-700 transition duration-300'
-            onClick={() => onNavigate('jobs')} // Changé de 'create-job' à 'jobs'
-          >
-            Créer une offre
-          </button>
-        </div>
-
-        {/* Voir les candidatures */}
-        <div className='bg-white rounded-xl shadow-sm p-6 border border-gray-100 hover:shadow-md transition-shadow duration-300'>
-          <h3 className='text-lg font-semibold text-gray-900 mb-4'>Gérer les candidatures</h3>
-          <p className='text-gray-600 mb-4'>
-            Consultez et gérez les candidatures reçues pour vos offres.
-          </p>
-          <button
-            className='bg-gray-100 text-gray-700 px-6 py-2 rounded-lg hover:bg-gray-200 transition duration-300'
-            onClick={() => onNavigate('candidates')} // Changé de 'manage-applications' à 'candidates'
-          >
-            Voir les candidatures
-          </button>
-        </div>
-      </div>
-
-      {/* Conseils et astuces */}
-      <div className='bg-white rounded-xl shadow-sm p-6 border border-gray-100 hover:shadow-md transition-shadow duration-300'>
-        <h3 className='text-lg font-semibold text-gray-900 mb-4'>Conseils pour optimiser vos recrutements</h3>
-        <div className='grid grid-cols-1 md:grid-cols-2 gap-4'>
-          <div className='flex items-start space-x-3'>
-            <AlertCircle className='w-5 h-5 text-blue-600 mt-1' />
-            <div>
-              <p className='font-medium text-gray-900'>Rédigez des descriptions claires</p>
-              <p className='text-sm text-gray-600'>Une description précise augmente la qualité des candidatures</p>
+          <div className='grid grid-cols-1 md:grid-cols-2 gap-6'>
+            <div className='group flex items-start space-x-4 p-4 rounded-xl hover:bg-white/50 transition-all duration-300'>
+              <div className="w-10 h-10 bg-blue-100 group-hover:bg-blue-200 rounded-lg flex items-center justify-center transition-colors duration-300">
+                <FileText className='w-5 h-5 text-blue-600' />
+              </div>
+              <div>
+                <p className='font-semibold text-gray-900 mb-1'>Rédigez des descriptions claires</p>
+                <p className='text-sm text-gray-600 leading-relaxed'>Une description précise et détaillée augmente significativement la qualité des candidatures reçues</p>
+              </div>
             </div>
-          </div>
-          <div className='flex items-start space-x-3'>
-            <AlertCircle className='w-5 h-5 text-blue-600 mt-1' />
-            <div>
-              <p className='font-medium text-gray-900'>Utilisez le matching IA</p>
-              <p className='text-sm text-gray-600'>Notre IA vous aide à trouver les meilleurs candidats</p>
+
+            <div className='group flex items-start space-x-4 p-4 rounded-xl hover:bg-white/50 transition-all duration-300'>
+              <div className="w-10 h-10 bg-purple-100 group-hover:bg-purple-200 rounded-lg flex items-center justify-center transition-colors duration-300">
+                <TrendingUp className='w-5 h-5 text-purple-600' />
+              </div>
+              <div>
+                <p className='font-semibold text-gray-900 mb-1'>Utilisez le matching IA</p>
+                <p className='text-sm text-gray-600 leading-relaxed'>Notre intelligence artificielle vous aide à identifier et classer les meilleurs candidats automatiquement</p>
+              </div>
             </div>
           </div>
         </div>

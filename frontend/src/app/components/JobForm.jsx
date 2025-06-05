@@ -56,7 +56,6 @@ export default function JobForm() {
       console.log("Token claims:", tokenResult.claims);
       console.log("UID:", currentUser.uid);
 
-
       const jobToSend = {
         ...jobValue,
         skills: jobValue.skills.split(',').map(s => s.trim()),
@@ -102,119 +101,144 @@ export default function JobForm() {
   }, [showForm]);
 
   return (
-    <div className="min-h-screen mt-16 relative">
+    <div className="min-h-screen mt-16 relative bg-gradient-to-br from-slate-50 to-blue-50/30">
       {/* Header */}
-      <div className={`px-6 py-6  border-b border-gray-300 bg-gray-100 flex items-center justify-between transition-all duration-300 ${showForm ? 'pointer-events-none' : ''}`}>
-        <h1 className="text-3xl  font-bold text-gray-800">Jobs</h1>
+      <div className={`px-8 py-8 border-b border-slate-200/60 bg-white/70 backdrop-blur-sm flex items-center justify-between transition-all duration-300 ${showForm ? 'pointer-events-none' : ''} shadow-sm`}>
+        <div>
+          <h1 className="text-4xl font-bold bg-gradient-to-r from-slate-800 to-slate-600 bg-clip-text text-transparent">
+            Offres d'emploi
+          </h1>
+          <p className="text-slate-600 mt-1 text-sm">Gérez et créez vos opportunités professionnelles</p>
+        </div>
         <button
           onClick={() => setShowForm(true)}
-          className="flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white font-medium px-4 py-2 rounded-md shadow-md transition duration-300 cursor-pointer"
+          className="group flex items-center gap-3 bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white font-semibold px-6 py-3 rounded-xl shadow-lg hover:shadow-xl transition-all duration-300 transform hover:scale-105 hover:-translate-y-0.5"
         >
-          <PlusCircle size={20} />
+          <PlusCircle size={22} className="group-hover:rotate-90 transition-transform duration-300" />
           Créer une offre
         </button>
       </div>
 
-      {/* Background content placeholder */}
-      <div className={`p-6 transition-all duration-300 ${showForm ? 'pointer-events-none' : ''}`}>
+      {/* Background content */}
+      <div className={`p-8 transition-all duration-300 ${showForm ? 'pointer-events-none blur-sm' : ''}`}>
         <JobList key={refreshTrigger} />
       </div>
 
       {/* Form Overlay */}
       {showForm && (
-        <div className="fixed inset-0 bg-white/60 flex items-center justify-center z-50">
-          <div className="bg-white rounded-lg shadow-xl p-8 w-full max-w-xl mx-4">
-            <h2 className="text-xl font-bold mb-4 text-gray-800">Créer une nouvelle offre</h2>
-            <form className="space-y-5" onSubmit={handleSubmit}>
+        <div className="fixed inset-0 bg-black/20 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-2xl shadow-2xl p-8 w-full max-w-2xl max-h-[90vh] overflow-y-auto mx-4 transform animate-in slide-in-from-bottom-4 duration-300">
+            <div className="mb-6">
+              <h2 className="text-2xl font-bold text-slate-800 mb-2">Créer une nouvelle offre</h2>
+              <div className="w-16 h-1 bg-gradient-to-r from-blue-600 to-purple-600 rounded-full"></div>
+            </div>
 
+            <form className="space-y-6" onSubmit={handleSubmit}>
               {/* Titre */}
-              <div>
-                <label className="block text-gray-700 font-medium mb-1">Titre</label>
+              <div className="group">
+                <label className="block text-slate-700 font-semibold mb-2 text-sm uppercase tracking-wide">
+                  Titre du poste
+                </label>
                 <input
                   type="text"
                   name="title"
                   value={jobValue.title}
                   onChange={handleChange}
-                  className="w-full border border-gray-300 rounded px-4 py-2 focus:ring-2 focus:ring-blue-500"
-                  placeholder="Ex: Développeur Full Stack"
+                  className="w-full border-2 border-slate-200 rounded-xl px-4 py-3 focus:border-blue-500 focus:ring-4 focus:ring-blue-500/10 transition-all duration-200 text-slate-800 placeholder-slate-400 bg-slate-50/30 hover:bg-white"
+                  placeholder="Ex: Développeur Full Stack Senior"
                 />
-                {errors.title && <p className="text-red-600 text-sm">{errors.title}</p>}
+                {errors.title && <p className="text-red-500 text-sm mt-1 font-medium">{errors.title}</p>}
               </div>
 
               {/* Company */}
-              <div>
-                <label className="block text-gray-700 font-medium mb-1">Entreprise</label>
+              <div className="group">
+                <label className="block text-slate-700 font-semibold mb-2 text-sm uppercase tracking-wide">
+                  Entreprise
+                </label>
                 <input
                   type="text"
                   name="company"
                   value={jobValue.company}
                   onChange={handleChange}
                   ref={inputRef}
-                  className="w-full border border-gray-300 rounded px-4 py-2 focus:ring-2 focus:ring-blue-500"
+                  className="w-full border-2 border-slate-200 rounded-xl px-4 py-3 focus:border-blue-500 focus:ring-4 focus:ring-blue-500/10 transition-all duration-200 text-slate-800 placeholder-slate-400 bg-slate-50/30 hover:bg-white"
                   placeholder="Nom de l'entreprise"
                 />
-                {errors.company && <p className="text-red-600 text-sm">{errors.company}</p>}
+                {errors.company && <p className="text-red-500 text-sm mt-1 font-medium">{errors.company}</p>}
               </div>
 
               {/* Description */}
-              <div>
-                <label className="block text-gray-700 font-medium mb-1">Description</label>
-                <input
-                  type="text"
+              <div className="group">
+                <label className="block text-slate-700 font-semibold mb-2 text-sm uppercase tracking-wide">
+                  Description
+                </label>
+                <textarea
                   name="description"
                   value={jobValue.description}
                   onChange={handleChange}
-                  className="w-full border border-gray-300 rounded px-4 py-2 focus:ring-2 focus:ring-blue-500"
-                  placeholder="Description du poste"
+                  rows="3"
+                  className="w-full border-2 border-slate-200 rounded-xl px-4 py-3 focus:border-blue-500 focus:ring-4 focus:ring-blue-500/10 transition-all duration-200 text-slate-800 placeholder-slate-400 bg-slate-50/30 hover:bg-white resize-none"
+                  placeholder="Décrivez le poste, les responsabilités et les missions..."
                 />
-                {errors.description && <p className="text-red-600 text-sm">{errors.description}</p>}
+                {errors.description && <p className="text-red-500 text-sm mt-1 font-medium">{errors.description}</p>}
               </div>
 
               {/* Location */}
-              <div>
-                <label className="block text-gray-700 font-medium mb-1">Localisation</label>
+              <div className="group">
+                <label className="block text-slate-700 font-semibold mb-2 text-sm uppercase tracking-wide">
+                  Localisation
+                </label>
                 <input
                   type="text"
                   name="location"
                   value={jobValue.location}
                   onChange={handleChange}
-                  className="w-full border border-gray-300 rounded px-4 py-2 focus:ring-2 focus:ring-blue-500"
-                  placeholder="Lieu de travail"
+                  className="w-full border-2 border-slate-200 rounded-xl px-4 py-3 focus:border-blue-500 focus:ring-4 focus:ring-blue-500/10 transition-all duration-200 text-slate-800 placeholder-slate-400 bg-slate-50/30 hover:bg-white"
+                  placeholder="Paris, France • Télétravail possible"
                 />
-                {errors.location && <p className="text-red-600 text-sm">{errors.location}</p>}
+                {errors.location && <p className="text-red-500 text-sm mt-1 font-medium">{errors.location}</p>}
               </div>
 
               {/* Skills */}
-              <div>
-                <label className="block text-gray-700 font-medium mb-1">Compétences</label>
+              <div className="group">
+                <label className="block text-slate-700 font-semibold mb-2 text-sm uppercase tracking-wide">
+                  Compétences requises
+                </label>
                 <input
                   type="text"
                   name="skills"
                   value={jobValue.skills}
                   onChange={handleChange}
-                  className="w-full border border-gray-300 rounded px-4 py-2 focus:ring-2 focus:ring-blue-500"
-                  placeholder="Ex: React, Python, MySQL"
+                  className="w-full border-2 border-slate-200 rounded-xl px-4 py-3 focus:border-blue-500 focus:ring-4 focus:ring-blue-500/10 transition-all duration-200 text-slate-800 placeholder-slate-400 bg-slate-50/30 hover:bg-white"
+                  placeholder="React, Node.js, TypeScript, PostgreSQL..."
                 />
-                {errors.skills && <p className="text-red-600 text-sm">{errors.skills}</p>}
+                <p className="text-slate-500 text-xs mt-1">Séparez les compétences par des virgules</p>
+                {errors.skills && <p className="text-red-500 text-sm mt-1 font-medium">{errors.skills}</p>}
               </div>
 
+              {/* Error message */}
+              {errors.submit && (
+                <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-xl">
+                  {errors.submit}
+                </div>
+              )}
+
               {/* Buttons */}
-              <div className="flex justify-end gap-4 pt-2">
+              <div className="flex justify-end gap-4 pt-4 border-t border-slate-100">
                 <button
                   type="button"
                   onClick={() => setShowForm(false)}
-                  className="bg-gray-300 text-gray-800 px-6 py-2 rounded hover:bg-gray-400 transition cursor-pointer"
+                  className="px-6 py-3 text-slate-600 hover:text-slate-800 font-semibold rounded-xl hover:bg-slate-100 transition-all duration-200"
                 >
                   Annuler
                 </button>
                 <button
                   type="submit"
-                  className="bg-blue-600 text-white px-6 py-2 rounded hover:bg-blue-700 transition cursor-pointer"
+                  className="bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white font-semibold px-8 py-3 rounded-xl shadow-lg hover:shadow-xl transition-all duration-300 transform hover:scale-105"
                 >
-                  Enregistrer
+                  Publier l'offre
                 </button>
               </div>
-
             </form>
           </div>
         </div>
