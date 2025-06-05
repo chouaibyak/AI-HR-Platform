@@ -91,7 +91,7 @@ def view_cv(uuid_part):
 app = Flask(__name__)
 CORS(app, resources={
     r"/cv/*": {
-        "origins": ["http://localhost:3000"],  # Remplacez par l'URL de votre frontend
+        "origins": ["http://localhost:3000"],
         "methods": ["GET", "POST", "PUT", "DELETE"],
         "allow_headers": ["Content-Type"]
     }
