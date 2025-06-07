@@ -71,6 +71,12 @@ export default function OffreList() {
     try {
       // Récupérer le score de matching pour ce job
       const cvId = storedCV.split("_")[0];
+
+      const analysisResponse = await fetch(`http://localhost:5003/get-analysis/${cvId}`);
+      const analysisData = await analysisResponse.json();
+      const skills = analysisResponse.ok ? analysisData.skills : [];
+      const summary = analysisResponse.ok ? analysisData.summary : '';
+
       const scoreRes = await fetch(`http://localhost:5004/match/${cvId}/${jobId}`);
       const matchData = await scoreRes.json();
 
@@ -82,7 +88,9 @@ export default function OffreList() {
         candidate_id: currentUser.uid,
         candidate_name: currentUser.displayName || 'Anonyme',
         cv_url: storedCV,
-        match_score: matchScore
+        match_score: matchScore,
+        skills: skills,
+        summary: summary
       });
       alert('Candidature envoyée!');
     } catch (error) {

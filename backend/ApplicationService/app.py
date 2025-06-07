@@ -19,7 +19,7 @@ def apply_to_job():
         data = request.get_json()
         
         # Validation des données requises
-        required_fields = ['job_id', 'job_title', 'candidate_id', 'candidate_name', 'cv_url']
+        required_fields = ['job_id', 'job_title', 'candidate_id', 'candidate_name', 'cv_url', 'skills']
         if not all(field in data for field in required_fields):
             return jsonify({'error': 'Données manquantes'}), 400
 
@@ -51,6 +51,8 @@ def apply_to_job():
                 'name': data['candidate_name']
             },
             'cv_url': data['cv_url'],
+            'skills': data['skills'],
+            'summary': data.get('summary', ''), 
             'created_at': datetime.utcnow().isoformat(),
             'status': 'pending',
             'match_score': data.get('match_score', 0)

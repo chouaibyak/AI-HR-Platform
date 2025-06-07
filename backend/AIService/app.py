@@ -131,6 +131,23 @@ def analyze_from_cvservice():
         'parsed_analysis': parsed
     })
 
+@app.route('/get-analysis/<cv_id>', methods=['GET'])
+def get_analysis(cv_id):
+    try:
+        doc_ref = db.collection("cv_analysis").document(cv_id)
+        doc = doc_ref.get()
+        
+        if not doc.exists:
+            return jsonify({'error': 'CV analysis not found'}), 404
+            
+        data = doc.to_dict()
+        return jsonify({
+            'skills': data.get('skills', []),
+            'summary': data.get('summary', 'Résumé non disponible')
+        }), 200
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
 # --- Lancement ---
 if __name__ == '__main__':
     app.run(port=5003, debug=True)
