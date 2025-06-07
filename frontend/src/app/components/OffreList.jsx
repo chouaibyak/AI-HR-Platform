@@ -2,97 +2,97 @@ import React, { useEffect, useState } from 'react';
 import apiJob from '../services/api/apiJob';
 import apiApplication from '../services/api/apiApplication';
 import { auth } from '../firebase';
-import { MapPin, Building2, Briefcase, TrendingUp, CheckCircle, Send, Star, Clock } from 'lucide-react';
+import { MapPin, Building2, Briefcase, TrendingUp, CheckCircle, Send, Star, Clock, FileText } from 'lucide-react';
+import apiCV from '../services/api/apiCV';
 
-export default function OffreList() {
+export default function OffreList({ onNavigate }) {
   const [jobs, setJobs] = useState([]);
   const [loading, setLoading] = useState(true);
   const [matchScores, setMatchScores] = useState({});
+  const [activeCvId, setActiveCvId] = useState(localStorage.getItem("active_cv") || null);
+  const [cvs, setCvs] = useState([]);
 
   useEffect(() => {
-    const fetchJobsAndScores = async () => {
+    const fetchData = async () => {
       try {
-        const response = await apiJob.get('/jobs');
-        const jobsData = response.data;
-        setJobs(jobsData);
+        // Charger les jobs
+        const jobsResponse = await apiJob.get('/jobs');
+        setJobs(jobsResponse.data);
 
-        const storedCV = localStorage.getItem("last_uploaded_cv");
-        console.log("CV stocké:", storedCV);
+        // Charger la liste des CVs
+        const cvsResponse = await apiCV.listCVs();
+        setCvs(cvsResponse.cvs);
 
-        if (!storedCV) {
-          console.log("Aucun CV trouvé dans le localStorage");
+        const activeCv = localStorage.getItem("active_cv");
+        setActiveCvId(activeCv);
+
+        if (!activeCv) {
+          console.log("Aucun CV sélectionné");
           return;
         }
 
-        // Extraire l'ID du CV du nom du fichier (première partie avant le premier underscore)
-        const cvId = storedCV.split("_")[0];
-        console.log("ID du CV extrait:", cvId);
+        // Récupérer les infos du CV
+        const cvInfo = await apiCV.getCVById(activeCv);
+        const cvShortId = cvInfo.saved_filename.split('_')[0];
 
+        // Calculer les scores de matching
         const scores = {};
-        for (const job of jobsData) {
+        for (const job of jobsResponse.data) {
           try {
-            console.log(`Récupération du score pour le job ${job.id} avec le CV ${cvId}`);
-            const scoreRes = await fetch(`http://localhost:5004/match/${cvId}/${job.id}`);
+            const scoreRes = await fetch(`http://localhost:5004/match/${cvShortId}/${job.id}`);
             const matchData = await scoreRes.json();
-
-            if (scoreRes.ok) {
-              console.log(`Score trouvé pour le job ${job.id}:`, matchData.match_score);
-              scores[job.id] = matchData.match_score;
-            } else {
-              console.error(`Erreur de matching pour le job ${job.id}:`, matchData.error);
-              scores[job.id] = null;
-            }
+            scores[job.id] = scoreRes.ok ? matchData.match_score : null;
           } catch (e) {
-            console.error(`Erreur lors du matching pour le job ${job.id}:`, e);
+            console.error(`Erreur matching job ${job.id}:`, e);
             scores[job.id] = null;
           }
         }
-        console.log("Scores finaux:", scores);
         setMatchScores(scores);
       } catch (err) {
-        console.error('Erreur lors de la récupération des offres:', err);
+        console.error('Erreur:', err);
       } finally {
         setLoading(false);
       }
     };
 
-    fetchJobsAndScores();
+    fetchData();
   }, []);
 
+  // Modifiez la fonction handleApply pour utiliser le CV actif
   const handleApply = async (jobId, jobTitle) => {
-    const storedCV = localStorage.getItem("last_uploaded_cv");
-    const currentUser = auth.currentUser;
-
-    if (!storedCV) {
-      alert("Veuillez d'abord déposer votre CV");
+    const activeCvId = localStorage.getItem("active_cv");
+    if (!activeCvId) {
+      alert("Veuillez d'abord sélectionner un CV");
       return;
     }
 
     try {
-      // Récupérer le score de matching pour ce job
-      const cvId = storedCV.split("_")[0];
+      // Récupérer les infos du CV
+      const cvInfo = await apiCV.getCVById(activeCvId);
+      const cvShortId = cvInfo.saved_filename.split('_')[0];
 
-      const analysisResponse = await fetch(`http://localhost:5003/get-analysis/${cvId}`);
-      const analysisData = await analysisResponse.json();
-      const skills = analysisResponse.ok ? analysisData.skills : [];
-      const summary = analysisResponse.ok ? analysisData.summary : '';
+      // Récupérer l'analyse du CV
+      const analysisResponse = await fetch(`http://localhost:5003/get-analysis/${cvShortId}`);
+      const analysisData = analysisResponse.ok ? await analysisResponse.json() : null;
 
-      const scoreRes = await fetch(`http://localhost:5004/match/${cvId}/${jobId}`);
-      const matchData = await scoreRes.json();
+      // Récupérer le score de matching
+      const scoreRes = await fetch(`http://localhost:5004/match/${cvShortId}/${jobId}`);
+      const matchData = scoreRes.ok ? await scoreRes.json() : { match_score: 0 };
 
-      const matchScore = scoreRes.ok ? matchData.match_score : 0;
-
+      // Envoyer la candidature
       await apiApplication.post('/applications', {
         job_id: jobId,
         job_title: jobTitle,
-        candidate_id: currentUser.uid,
-        candidate_name: currentUser.displayName || 'Anonyme',
-        cv_url: storedCV,
-        match_score: matchScore,
-        skills: skills,
-        summary: summary
+        candidate_id: auth.currentUser.uid,
+        candidate_name: auth.currentUser.displayName || 'Anonyme',
+        cv_url: cvInfo.saved_filename,
+        match_score: matchData.match_score,
+        skills: analysisData?.skills || [],
+        summary: analysisData?.summary || '',
+        cv_id: activeCvId  // Ajouter l'ID du CV utilisé
       });
-      alert('Candidature envoyée!');
+
+      alert('Candidature envoyée avec succès!');
     } catch (error) {
       console.error('Erreur:', error);
       alert('Erreur lors de la candidature');
@@ -140,22 +140,24 @@ export default function OffreList() {
           </p>
         </div>
 
-        {/* CV Status Card */}
-        {localStorage.getItem("last_uploaded_cv") && (
-          <div className="bg-gradient-to-r from-emerald-500 to-green-500 rounded-2xl p-6 mb-8 shadow-xl border border-emerald-200">
+        {activeCvId && (
+          <div className="bg-gradient-to-r from-blue-500 to-blue-600 rounded-2xl p-6 mb-8 shadow-xl border border-blue-200">
             <div className="flex items-center gap-4">
               <div className="bg-white/20 rounded-full p-3">
-                <CheckCircle className="w-6 h-6 text-white" />
+                <FileText className="w-6 h-6 text-white" />
               </div>
               <div className="flex-1">
-                <h3 className="text-white font-semibold text-lg">CV Enregistré avec Succès</h3>
-                <p className="text-emerald-100">
-                  {localStorage.getItem("last_uploaded_cv")}
+                <h3 className="text-white font-semibold text-lg">CV utilisé pour le matching</h3>
+                <p className="text-blue-100 truncate">
+                  {cvs.find(cv => cv.id === activeCvId)?.original_filename || "Chargement..."}
                 </p>
               </div>
-              <div className="bg-white/20 rounded-lg px-4 py-2">
-                <span className="text-white font-medium">Prêt à postuler</span>
-              </div>
+              <button
+                onClick={() => onNavigate && onNavigate("cv")}
+                className="bg-white/20 hover:bg-white/30 text-white px-4 py-2 rounded-lg font-medium transition-colors"
+              >
+                Changer
+              </button>
             </div>
           </div>
         )}

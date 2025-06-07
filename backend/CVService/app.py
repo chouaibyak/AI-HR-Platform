@@ -53,12 +53,22 @@ def download_cv(filename):
 #Route pour supprimer un fichier
 @cv_bp.route('/delete/<filename>', methods=['DELETE'])
 def delete_cv(filename):
-    filepath = os.path.join(UPLOAD_FOLDER, filename)
-    if os.path.exists(filepath):
-        os.remove(filepath)
+    try:
+        filepath = os.path.join(UPLOAD_FOLDER, filename)
+        
+        # Supprimer le fichier du système de fichiers
+        if os.path.exists(filepath):
+            os.remove(filepath)
+        
+        # Supprimer le document Firestore correspondant
+        docs = db.collection('cvs').where('saved_filename', '==', filename).stream()
+        for doc in docs:
+            doc.reference.delete()
+        
         return jsonify({'message': 'Fichier supprimé avec succès'}), 200
-    else:
-        return jsonify({'error': 'Fichier introuvable'}), 404
+    except Exception as e:
+        print(f"Erreur lors de la suppression: {str(e)}")
+        return jsonify({'error': str(e)}), 500
 
 #view CV
 @cv_bp.route('/view/<uuid_part>', methods=['GET'])
@@ -85,6 +95,35 @@ def view_cv(uuid_part):
         
     except Exception as e:
         print(f"Erreur : {str(e)}")
+        return jsonify({'error': str(e)}), 500
+
+@cv_bp.route('/list', methods=['GET'])
+def list_cvs():
+    try:
+        # Récupérer tous les CVs de Firestore
+        docs = db.collection('cvs').stream()
+        cvs = []
+        
+        for doc in docs:
+            cv_data = doc.to_dict()
+            cv_data['id'] = doc.id  # Ajouter l'ID du document
+            cvs.append(cv_data)
+            
+        return jsonify({'cvs': cvs}), 200
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
+@cv_bp.route('/get/<cv_id>', methods=['GET'])
+def get_cv(cv_id):
+    try:
+        doc_ref = db.collection('cvs').document(cv_id)
+        doc = doc_ref.get()
+        
+        if not doc.exists:
+            return jsonify({'error': 'CV not found'}), 404
+            
+        return jsonify(doc.to_dict()), 200
+    except Exception as e:
         return jsonify({'error': str(e)}), 500
 
 # Configuration de l'application Flask
