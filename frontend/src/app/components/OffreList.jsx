@@ -67,19 +67,50 @@ export default function OffreList({ onNavigate }) {
     }
 
     try {
-      // Récupérer les infos du CV
+      console.log("CV ID:", activeCvId);
       const cvInfo = await apiCV.getCVById(activeCvId);
+      console.log("CV Info:", cvInfo);
+
       const cvShortId = cvInfo.saved_filename.split('_')[0];
+      console.log("CV Short ID:", cvShortId);
 
       // Récupérer l'analyse du CV
-      const analysisResponse = await fetch(`http://localhost:5003/get-analysis/${cvShortId}`);
-      const analysisData = analysisResponse.ok ? await analysisResponse.json() : null;
+      let analysisData = null;
+      try {
+        const analysisResponse = await fetch(`http://localhost:5003/get-analysis/${cvShortId}`);
+        console.log("Analysis response status:", analysisResponse.status);
+        if (analysisResponse.ok) {
+          analysisData = await analysisResponse.json();
+          console.log("Analysis data:", analysisData);
+        }
+      } catch (e) {
+        console.error("Error fetching analysis:", e);
+      }
 
       // Récupérer le score de matching
-      const scoreRes = await fetch(`http://localhost:5004/match/${cvShortId}/${jobId}`);
-      const matchData = scoreRes.ok ? await scoreRes.json() : { match_score: 0 };
+      let matchData = { match_score: 0 };
+      try {
+        const scoreRes = await fetch(`http://localhost:5004/match/${cvShortId}/${jobId}`);
+        console.log("Match score response status:", scoreRes.status);
+        if (scoreRes.ok) {
+          matchData = await scoreRes.json();
+        }
+      } catch (e) {
+        console.error("Error fetching match score:", e);
+      }
 
-      // Envoyer la candidature
+      console.log("Sending application with data:", {
+        job_id: jobId,
+        job_title: jobTitle,
+        candidate_id: auth.currentUser.uid,
+        candidate_name: auth.currentUser.displayName || 'Anonyme',
+        cv_url: cvInfo.saved_filename,
+        match_score: matchData.match_score,
+        skills: analysisData?.skills || [],
+        summary: analysisData?.summary || '',
+        cv_id: activeCvId
+      });
+
       await apiApplication.post('/applications', {
         job_id: jobId,
         job_title: jobTitle,
@@ -89,12 +120,12 @@ export default function OffreList({ onNavigate }) {
         match_score: matchData.match_score,
         skills: analysisData?.skills || [],
         summary: analysisData?.summary || '',
-        cv_id: activeCvId  // Ajouter l'ID du CV utilisé
+        cv_id: activeCvId
       });
 
       alert('Candidature envoyée avec succès!');
     } catch (error) {
-      console.error('Erreur:', error);
+      console.error('Full error:', error);
       alert('Erreur lors de la candidature');
     }
   };
@@ -121,7 +152,7 @@ export default function OffreList({ onNavigate }) {
             <div className="animate-spin rounded-full h-16 w-16 border-4 border-blue-200"></div>
             <div className="animate-spin rounded-full h-16 w-16 border-4 border-blue-600 border-t-transparent absolute top-0"></div>
           </div>
-          <p className="mt-4 text-gray-600 font-medium">Chargement des candidatures...</p>
+          <p className="mt-4 text-gray-600 font-medium">Chargement des offres d'emploi...</p>
         </div>
       </div>
     )

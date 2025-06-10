@@ -63,16 +63,16 @@ export default function HommeCandidat({ onNavigate }) {
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center min-h-screen pt-20">
-        <div className="relative">
-          <div className="animate-spin rounded-full h-16 w-16 border-4 border-blue-200"></div>
-          <div className="animate-spin rounded-full h-16 w-16 border-t-4 border-blue-600 absolute top-0 left-0"></div>
-          <div className="absolute inset-0 flex items-center justify-center">
-            <div className="w-8 h-8 bg-blue-600 rounded-full animate-pulse"></div>
+      <div className="flex items-center justify-center min-h-screen pt-20 pl-30">
+        <div className="text-center">
+          <div className="relative ml-20">
+            <div className="animate-spin rounded-full h-16 w-16 border-4 border-blue-200"></div>
+            <div className="animate-spin rounded-full h-16 w-16 border-4 border-blue-600 border-t-transparent absolute top-0"></div>
           </div>
+          <p className="mt-4 text-gray-600 font-medium">Chargement de Homme...</p>
         </div>
       </div>
-    );
+    )
   }
 
   if (error) {

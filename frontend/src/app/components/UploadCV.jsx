@@ -151,7 +151,7 @@ export default function UploadCV() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-blue-100">
+    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-blue-100 mt-20">
       <div className="pt-12 pb-20 px-6 max-w-7xl mx-auto">
         {/* Header avec animation */}
         <div className="text-center mb-12 animate-fade-in">
@@ -265,15 +265,15 @@ export default function UploadCV() {
                             key={cv.id}
                             onClick={() => handleSelectCv(cv)}
                             className={`group p-4 rounded-xl cursor-pointer transition-all duration-300 ${selectedCv?.id === cv.id
-                                ? 'bg-gradient-to-r from-blue-100 to-blue-50 border-2 border-blue-300 shadow-lg'
-                                : 'hover:bg-gray-50 hover:shadow-md border-2 border-transparent'
+                              ? 'bg-gradient-to-r from-blue-100 to-blue-50 border-2 border-blue-300 shadow-lg'
+                              : 'hover:bg-gray-50 hover:shadow-md border-2 border-transparent'
                               }`}
                           >
                             <div className="flex items-center justify-between">
                               <div className="flex items-center space-x-3">
                                 <div className={`p-2 rounded-lg ${selectedCv?.id === cv.id
-                                    ? 'bg-blue-500 text-white'
-                                    : 'bg-gray-100 text-gray-600 group-hover:bg-blue-100 group-hover:text-blue-600'
+                                  ? 'bg-blue-500 text-white'
+                                  : 'bg-gray-100 text-gray-600 group-hover:bg-blue-100 group-hover:text-blue-600'
                                   }`}>
                                   <FileText size={20} />
                                 </div>
@@ -286,8 +286,8 @@ export default function UploadCV() {
                               </div>
                               <ChevronRight
                                 className={`transition-transform duration-300 ${selectedCv?.id === cv.id
-                                    ? 'text-blue-500 transform rotate-90'
-                                    : 'text-gray-400 group-hover:translate-x-1'
+                                  ? 'text-blue-500 transform rotate-90'
+                                  : 'text-gray-400 group-hover:translate-x-1'
                                   }`}
                                 size={20}
                               />

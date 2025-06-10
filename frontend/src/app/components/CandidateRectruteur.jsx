@@ -167,21 +167,13 @@ export default function CandidatRecruteur() {
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center min-h-screen pt-20 pl-30 bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-100">
+      <div className="flex items-center justify-center min-h-screen pt-20 pl-30">
         <div className="text-center">
           <div className="relative ml-20">
-            <div className="animate-spin rounded-full h-20 w-20 border-4 border-blue-200/40 shadow-2xl"></div>
-            <div className="animate-spin rounded-full h-20 w-20 border-4 border-transparent border-t-blue-600 border-r-purple-600 absolute top-0 shadow-2xl"></div>
-            <div className="absolute inset-0 rounded-full bg-gradient-to-r from-blue-400/20 to-purple-400/20 blur-xl"></div>
+            <div className="animate-spin rounded-full h-16 w-16 border-4 border-blue-200"></div>
+            <div className="animate-spin rounded-full h-16 w-16 border-4 border-blue-600 border-t-transparent absolute top-0"></div>
           </div>
-          <div className="mt-8 backdrop-blur-sm bg-white/60 rounded-2xl p-6 border border-white/40 shadow-xl">
-            <p className="text-gray-700 font-semibold text-lg">Chargement des candidatures...</p>
-            <div className="flex items-center justify-center mt-3 gap-1">
-              <div className="w-2 h-2 bg-blue-500 rounded-full animate-bounce"></div>
-              <div className="w-2 h-2 bg-purple-500 rounded-full animate-bounce" style={{ animationDelay: '0.1s' }}></div>
-              <div className="w-2 h-2 bg-indigo-500 rounded-full animate-bounce" style={{ animationDelay: '0.2s' }}></div>
-            </div>
-          </div>
+          <p className="mt-4 text-gray-600 font-medium">Chargement des candidatures...</p>
         </div>
       </div>
     )
